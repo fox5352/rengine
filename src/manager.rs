@@ -1,83 +1,35 @@
-use std::{sync::Mutex, time::Instant};
+use std::time::Instant;
 
-use crate::{
-    engine::{Object, StaticObject},
-    scene::{self, PhysicsObjectTrait, World},
-};
+use crate::scene::World;
 
 /// Main game loop function
-pub struct GameLoop<S, A>
-where
-    S: IntoIterator<Item = Box<dyn Object>>,
-    A: IntoIterator<Item = Box<dyn PhysicsObjectTrait>>,
-{
+pub struct GameLoop {
     last_time: Instant,
-    scene: Mutex<Option<World<'a,S, A>>>,
+    scene: World, // Holds references valid for 'w
 }
 
-impl<S, A> GameLoop<S, A>
-where
-    S: IntoIterator<Item = Box<dyn Object>>,
-    A: IntoIterator<Item = Box<dyn PhysicsObjectTrait>>,
-{
-    pub fn new() -> Self {
-        return Self {
+impl GameLoop {
+    pub fn new(scene: World) -> Self {
+        Self {
             last_time: Instant::now(),
-            scene: Mutex::new(None),
-        };
+            scene,
+        }
     }
 
     pub fn update(&mut self) {
-        let now = Instant::now();
-        let delta_time = now.duration_since(self.last_time);
-        let delta_time = delta_time.as_secs_f32();
+        let current_time = Instant::now();
+        let delta_time = current_time.duration_since(self.last_time);
+        let dt = delta_time.as_secs_f32(); // Convert to seconds as f32
 
-        // pass delter time here to dedicated updater funtion
+        self.update_game(dt);
 
-        // if let Some(scene) = self.scene.as_ref() {
-        //     for s_obj in scene.static_objects {
-        //     }
-        //     for a_obj in scene.animated_objects {
-
-        //     }
-        // }
-
-        self.last_time = now;
+        self.last_time = current_time;
     }
 
-    pub fn update_game(self, delta_time: f32) {
-        let scene = self.scene.lock().expect("Failed to get lock of scene mutex");
-
-        if let Some(scene) =  scene.as_ref(){
-            
-        }
-
-
-    }
-
-    pub fn run(mut self, scene: Option<World<S, A>>)
-    where
-        S: IntoIterator<Item = Box<dyn Object>>,
-        A: IntoIterator<Item = Box<dyn PhysicsObjectTrait>>,
-    {
-        let mut counter = 0;
-
-        self.scene = scene;
-
-        loop {
-            self.update();
-
-            #[cfg(debug_assertions)]
-            {
-                counter += 1;
-
-                if counter >= 5 {
-                    let mut buffer = String::new();
-
-                    std::io::stdin().read_line(&mut buffer).expect("testing");
-                    counter = 0;
-                }
-            }
-        }
+    pub fn update_game(&mut self, delta_time: f32) {
+        self.scene
+            .animated_objects
+            .iter_mut()
+            .for_each(|obj| obj.update(delta_time));
     }
 }
