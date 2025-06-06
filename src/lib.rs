@@ -1,3 +1,4 @@
+pub mod types;
 pub mod utils;
 
 // Declare the modules so Rust knows about them
