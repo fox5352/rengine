@@ -246,4 +246,3 @@ mod tests {
         assert!(length2 == 3);
     }
 }
-

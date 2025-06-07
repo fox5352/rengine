@@ -17,10 +17,8 @@ fn main() {
         Velocity { y: 0.0, x: 25.0 },
     ));
 
-    let _world = World {
-        static_objects: vec![],
-        animated_objects: vec![platform],
-    };
+    let mut _world = World::new();
+    _world.add_animated(vec![platform]);
 
     let mut game_loop = GameLoop::new(_world);
 

@@ -27,9 +27,9 @@ impl GameLoop {
     }
 
     pub fn update_game(&mut self, delta_time: f32) {
-        self.scene
-            .animated_objects
-            .iter_mut()
-            .for_each(|obj| obj.update(delta_time));
+        self.scene.s_objects.iter().for_each(|_obj| {});
+        self.scene.a_objects.iter().for_each(|obj| {
+            obj.lock().unwrap().update(delta_time);
+        });
     }
 }
