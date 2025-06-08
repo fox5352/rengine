@@ -1,5 +1,5 @@
 use crate::{
-    engine::{Object, PhysicsObject},
+    engine::traits::{Object, PhysicsObject},
     types::List,
 };
 

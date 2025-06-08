@@ -1,5 +1,13 @@
 pub mod area_calc {}
 
+pub mod utils {
+    use uuid::Uuid;
+
+    pub fn gen_id() -> Uuid {
+        uuid::Uuid::new_v4()
+    }
+}
+
 pub mod shapes {
     pub struct Rectangle {
         pub width: f32,

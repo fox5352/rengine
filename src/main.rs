@@ -1,8 +1,8 @@
 use rengine::{
-    engine::{AnimatedObject, Point, Size},
+    engine::structures::AnimatedObject,
     manager::GameLoop,
     scene::World,
-    units::Velocity,
+    units::{Point, Size, Velocity},
 };
 use std::thread::sleep;
 use std::time::{Duration, Instant};
@@ -11,9 +11,10 @@ fn main() {
     let pos = Point::new(250.0, 250.0, None);
     let size = Size::new(50.0, 50.0);
 
-    let platform = Box::new(AnimatedObject::from(
-        size,
+    let platform = Box::new(AnimatedObject::new(
+        String::from("Platform"),
         pos,
+        size,
         Velocity { y: 0.0, x: 25.0 },
     ));
 

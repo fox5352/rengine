@@ -7,7 +7,12 @@ pub mod manager;
 pub mod scene; // Defines the game world and holds collections of objects // Contains the game loop and manages object updates/input
 pub mod units;
 
-use engine::{AnimatedObject, Object, PhysicsObject, Point, Size, StaticObject};
+use engine::{
+    structures::{AnimatedObject, StaticObject},
+    traits::{Object, PhysicsObject},
+};
+
+use units::{Point, Size};
 
 impl Object for StaticObject {
     fn set_pos(mut self, pos: Point) {
@@ -31,4 +36,5 @@ impl PhysicsObject for AnimatedObject {
     fn update(&mut self, delta_time: f32) {
         self.pos.x += self.velocity.x * delta_time;
     }
+    fn process(&mut self, delta_time: f32) {}
 }
