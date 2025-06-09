@@ -1,14 +1,11 @@
 use crate::{
-    engine::traits::{Object, PhysicsObject},
+    engine::traits::{PhysicsObjectTrait, StaticObjectTrait},
     types::List,
 };
 
-pub trait PhysicsObjectTrait: Object + PhysicsObject {}
-impl<T: Object + PhysicsObject> PhysicsObjectTrait for T {}
-
 /// The World holds objects which are iterable StaticObjects
 pub struct World {
-    pub s_objects: List<Box<dyn Object>>,
+    pub s_objects: List<Box<dyn StaticObjectTrait>>,
     pub a_objects: List<Box<dyn PhysicsObjectTrait>>,
 }
 
@@ -26,7 +23,7 @@ impl World {
         Self::default()
     }
 
-    pub fn add_static(&mut self, static_objects: Vec<Box<dyn Object>>) {
+    pub fn add_static(&mut self, static_objects: Vec<Box<dyn StaticObjectTrait>>) {
         for obj in static_objects {
             self.s_objects.append(obj);
         }

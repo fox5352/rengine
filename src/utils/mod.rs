@@ -1,6 +1,6 @@
 pub mod area_calc {}
 
-pub mod utils {
+pub mod util_items {
     use uuid::Uuid;
 
     pub fn gen_id() -> Uuid {

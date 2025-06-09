@@ -181,6 +181,74 @@ impl<'a, T> IntoIterator for &'a List<T> {
     }
 }
 
+pub mod state_machines {
+    use once_cell::sync::Lazy;
+    use std::sync::{Arc, RwLock};
+
+    #[derive(Debug)]
+    pub enum MaskState {
+        Processing,
+        Idle,
+        Error(String),
+    }
+
+    #[derive(Debug)]
+    pub struct MaskStateMachine {
+        _state: MaskState,
+        masks: [Vec<String>; 15],
+    }
+
+    impl Default for MaskStateMachine {
+        fn default() -> Self {
+            let masks: [Vec<String>; 15] = [(); 15].map(|_| vec![]);
+            Self {
+                _state: MaskState::Idle,
+                masks,
+            }
+        }
+    }
+
+    impl MaskStateMachine {
+        pub fn new() -> Self {
+            Self::default()
+        }
+
+        // Changed to &mut self so we can modify
+        pub fn append_mask(&mut self, mask: usize, item: String) -> Result<(), String> {
+            let index = mask.checked_sub(1).ok_or("mask must be >= 1")?;
+
+            if index >= 15 {
+                return Err("mask out of range, must be between 1 and 15".to_string());
+            }
+
+            self.masks[index].push(item);
+            Ok(())
+        }
+
+        pub fn get_masks(&self) -> &[Vec<String>; 15] {
+            &self.masks
+        }
+    }
+
+    // Safe global shared instance, no `mut`
+    pub static MASK_STATE: Lazy<Arc<RwLock<MaskStateMachine>>> =
+        Lazy::new(|| Arc::new(RwLock::new(MaskStateMachine::new())));
+
+    pub fn append_mask(mask: usize, item: String) -> Result<(), String> {
+        let mut state = MASK_STATE
+            .write()
+            .map_err(|e| format!("RwLock poisoned: {}", e))?;
+        state.append_mask(mask, item)
+    }
+
+    pub fn get_masks() -> Result<[Vec<String>; 15], String> {
+        let state = MASK_STATE
+            .read()
+            .map_err(|e| format!("RwLock poisoned: {}", e))?;
+        Ok(state.get_masks().clone())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
