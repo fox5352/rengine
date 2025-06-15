@@ -183,32 +183,44 @@ impl<'a, T> IntoIterator for &'a List<T> {
 
 pub mod state_machines {
     use once_cell::sync::Lazy;
-    use std::sync::{Arc, RwLock};
+    use std::{
+        collections::HashMap,
+        sync::{Arc, Mutex, RwLock},
+    };
+
+    use crate::engine::traits::{PhysicsObjectTrait, StaticObjectTrait};
 
     #[derive(Debug)]
-    pub enum MaskState {
+    pub enum GlobalState {
         Processing,
         Idle,
         Error(String),
     }
 
-    #[derive(Debug)]
-    pub struct MaskStateMachine {
-        _state: MaskState,
+    pub struct GlobalStateMachine {
+        _state: GlobalState,
         masks: [Vec<String>; 15],
+        pub s_identifiables: Vec<String>,
+        pub a_identifiables: Vec<String>,
+        s_map: HashMap<String, Arc<Mutex<Box<dyn StaticObjectTrait>>>>,
+        a_map: HashMap<String, Arc<Mutex<Box<dyn PhysicsObjectTrait>>>>,
     }
 
-    impl Default for MaskStateMachine {
+    impl Default for GlobalStateMachine {
         fn default() -> Self {
             let masks: [Vec<String>; 15] = [(); 15].map(|_| vec![]);
             Self {
-                _state: MaskState::Idle,
+                _state: GlobalState::Idle,
                 masks,
+                s_identifiables: Vec::new(),
+                a_identifiables: Vec::new(),
+                s_map: HashMap::new(),
+                a_map: HashMap::new(),
             }
         }
     }
 
-    impl MaskStateMachine {
+    impl GlobalStateMachine {
         pub fn new() -> Self {
             Self::default()
         }
@@ -225,24 +237,55 @@ pub mod state_machines {
             Ok(())
         }
 
+        pub fn insert_s_map(&mut self, key: String, value: Arc<Mutex<Box<dyn StaticObjectTrait>>>) {
+            if self.s_map.contains_key(&key) {
+                panic!("Duplicate ID '{}' in s_map", key);
+            }
+
+            self.s_map.insert(key, value);
+        }
+
+        pub fn insert_a_map(
+            &mut self,
+            key: String,
+            value: Arc<Mutex<Box<dyn PhysicsObjectTrait>>>,
+        ) {
+            if self.a_map.contains_key(&key) {
+                panic!("Duplicate ID '{}' in a_map", key);
+            }
+
+            self.a_map.insert(key, value);
+        }
+
+        pub fn get_s_map_value(&self, key: &str) -> Option<Arc<Mutex<Box<dyn StaticObjectTrait>>>> {
+            self.s_map.get(key).cloned()
+        }
+
+        pub fn get_a_map_value(
+            &self,
+            key: &str,
+        ) -> Option<Arc<Mutex<Box<dyn PhysicsObjectTrait>>>> {
+            self.a_map.get(key).cloned()
+        }
+
         pub fn get_masks(&self) -> &[Vec<String>; 15] {
             &self.masks
         }
     }
 
     // Safe global shared instance, no `mut`
-    pub static MASK_STATE: Lazy<Arc<RwLock<MaskStateMachine>>> =
-        Lazy::new(|| Arc::new(RwLock::new(MaskStateMachine::new())));
+    pub static GLOBAL_STATE: Lazy<Arc<RwLock<GlobalStateMachine>>> =
+        Lazy::new(|| Arc::new(RwLock::new(GlobalStateMachine::new())));
 
     pub fn append_mask(mask: usize, item: String) -> Result<(), String> {
-        let mut state = MASK_STATE
+        let mut state = GLOBAL_STATE
             .write()
             .map_err(|e| format!("RwLock poisoned: {}", e))?;
         state.append_mask(mask, item)
     }
 
     pub fn get_masks() -> Result<[Vec<String>; 15], String> {
-        let state = MASK_STATE
+        let state = GLOBAL_STATE
             .read()
             .map_err(|e| format!("RwLock poisoned: {}", e))?;
         Ok(state.get_masks().clone())

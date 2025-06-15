@@ -26,11 +26,14 @@ pub mod traits {
     }
 
     /// full trait
-    pub trait StaticObjectTrait: Object + Identifiable + Named {}
-    impl<T: Object + Identifiable + Named> StaticObjectTrait for T {}
+    pub trait StaticObjectTrait: Object + Identifiable + Named + Send + Sync {}
+    impl<T: Object + Identifiable + Named + Send + Sync> StaticObjectTrait for T {}
 
-    pub trait PhysicsObjectTrait: Object + PhysicsObject + Identifiable + Named {}
-    impl<T: Object + PhysicsObject + Identifiable + Named> PhysicsObjectTrait for T {}
+    pub trait PhysicsObjectTrait:
+        Object + PhysicsObject + Identifiable + Named + Send + Sync
+    {
+    }
+    impl<T: Object + PhysicsObject + Identifiable + Named + Send + Sync> PhysicsObjectTrait for T {}
 }
 
 pub mod structures {

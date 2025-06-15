@@ -6,8 +6,9 @@ use std::{
 };
 
 use crate::{
-    engine::traits::{PhysicsObjectTrait, StaticObjectTrait},
+    engine::traits::{Masks, PhysicsObjectTrait, StaticObjectTrait},
     scene::World,
+    types::state_machines::GLOBAL_STATE,
 };
 
 /// Main game loop structure that manages timing and scene updates
@@ -67,41 +68,37 @@ impl GameLoop {
 /// # Arguments
 /// * `scene` - The World containing all game objects to run
 pub fn run(scene: World) {
-    // Initialize vectors to store object IDs for quick lookup
-    let mut s_identifiables: Vec<String> = Vec::new(); // Static object IDs
-    let mut a_identifiables: Vec<String> = Vec::new(); // Active object IDs
+    {
+        // Initialize vectors to store object IDs for quick lookup into the global state
+        let mut globale_state = GLOBAL_STATE.write().expect("Failed to lock global state");
+        // Build static objects lookup structures
+        scene.s_objects.iter().for_each(|obj| {
+            // Extract the unique ID from each static object
+            let id = obj
+                .lock()
+                .expect("Failed to lock on building static identifiables list")
+                .get_id()
+                .to_string();
 
-    // Initialize hash maps for O(1) object lookup by ID
-    let mut s_map: HashMap<String, Arc<Mutex<Box<dyn StaticObjectTrait>>>> = HashMap::new();
-    let mut a_map: HashMap<String, Arc<Mutex<Box<dyn PhysicsObjectTrait>>>> = HashMap::new();
+            // // Store ID in both vector and hash map for different access patterns
+            globale_state.s_identifiables.push(id.clone());
+            globale_state.insert_s_map(id.clone(), Arc::clone(&obj));
+        });
 
-    // Build static objects lookup structures
-    scene.s_objects.iter().for_each(|obj| {
-        // Extract the unique ID from each static object
-        let id = obj
-            .lock()
-            .expect("Failed to lock on building static identifiables list")
-            .get_id()
-            .to_string();
+        // Build active objects lookup structures
+        scene.a_objects.iter().for_each(|obj| {
+            // Extract the unique ID from each active/physics object
+            let id = obj
+                .lock()
+                .expect("Failed to lock on building active identifiables list")
+                .get_id()
+                .to_string();
 
-        // Store ID in both vector and hash map for different access patterns
-        s_identifiables.push(id.clone());
-        s_map.insert(id, Arc::clone(&obj));
-    });
-
-    // Build active objects lookup structures
-    scene.a_objects.iter().for_each(|obj| {
-        // Extract the unique ID from each active/physics object
-        let id = obj
-            .lock()
-            .expect("Failed to lock on building active identifiables list")
-            .get_id()
-            .to_string();
-
-        // Store ID in both vector and hash map for different access patterns
-        a_identifiables.push(id.clone());
-        a_map.insert(id, Arc::clone(&obj));
-    });
+            // Store ID in both vector and hash map for different access patterns
+            globale_state.a_identifiables.push(id.clone());
+            globale_state.insert_a_map(id.clone(), Arc::clone(&obj));
+        });
+    }
 
     // Create the main game loop instance
     let mut game_loop = GameLoop::new(scene);
@@ -124,8 +121,8 @@ pub fn run(scene: World) {
         {
             counter += 1;
             // Pause execution every 5 frames for debugging/testing
-            if counter >= 5 {
-                println!("ran 5 cycles");
+            if counter >= 50 {
+                println!("ran 50 cycles");
                 let mut buffer = String::new();
                 std::io::stdin()
                     .read_line(&mut buffer)
@@ -142,4 +139,3 @@ pub fn run(scene: World) {
         }
     }
 }
-
