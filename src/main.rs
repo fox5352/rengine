@@ -2,6 +2,7 @@ use rengine::{
     engine::structures::AnimatedObject,
     manager::run,
     scene::World,
+    temp::window::start_window,
     units::{Point, Size, Velocity},
     utils::shapes::CustomShape,
 };
@@ -22,7 +23,8 @@ fn main() {
     let mut _world = World::new();
     _world.add_animated(vec![platform]);
 
-    run(_world);
+    start_window();
+    /* run(_world); */
 
     // let mut game_loop = GameLoop::new(_world);
     //
