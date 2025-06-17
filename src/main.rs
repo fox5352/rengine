@@ -3,6 +3,7 @@ use rengine::{
     manager::run,
     scene::World,
     units::{Point, Size, Velocity},
+    utils::shapes::CustomShape,
 };
 
 fn main() {
@@ -15,6 +16,7 @@ fn main() {
         size,
         Velocity { y: 0.0, x: 25.0 },
         Some(vec![1]),
+        CustomShape::gen_rectangle(),
     ));
 
     let mut _world = World::new();

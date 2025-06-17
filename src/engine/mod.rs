@@ -1,17 +1,36 @@
 pub mod traits {
-    use crate::units::{Point, Size};
+    use crate::{
+        units::{Point, Size, Velocity},
+        utils::shapes::CustomShape,
+    };
     use uuid::Uuid;
 
-    pub trait Identifiable {
+    pub trait IdentifiableTrait {
         fn get_id(&self) -> Uuid;
     }
 
-    pub trait Named {
+    pub trait NamedTrait {
         fn get_name(&self) -> String;
     }
 
-    pub trait Masks {
+    pub trait MasksTrait {
         fn get_masks(&self) -> Vec<usize>;
+    }
+
+    pub trait ShapeTrait {
+        fn get_shape(&self) -> CustomShape;
+    }
+
+    pub trait VelocityTrait {
+        fn get_velocity(&self) -> Velocity;
+    }
+
+    pub trait SizeTrait {
+        fn get_size(&self) -> Size;
+    }
+
+    pub trait PointTrait {
+        fn get_pos(&self) -> Point;
     }
 
     /// The `engine` module defines game objects and their traits.
@@ -26,14 +45,61 @@ pub mod traits {
     }
 
     /// full trait
-    pub trait StaticObjectTrait: Object + Identifiable + Named + Send + Sync {}
-    impl<T: Object + Identifiable + Named + Send + Sync> StaticObjectTrait for T {}
-
-    pub trait PhysicsObjectTrait:
-        Object + PhysicsObject + Identifiable + Named + Send + Sync
+    pub trait StaticObjectTrait:
+        Send
+        + Sync
+        + Object
+        + IdentifiableTrait
+        + NamedTrait
+        + MasksTrait
+        + SizeTrait
+        + PointTrait
+        + ShapeTrait
     {
     }
-    impl<T: Object + PhysicsObject + Identifiable + Named + Send + Sync> PhysicsObjectTrait for T {}
+    impl<
+        T: Send
+            + Sync
+            + Object
+            + IdentifiableTrait
+            + NamedTrait
+            + MasksTrait
+            + SizeTrait
+            + PointTrait
+            + ShapeTrait,
+    > StaticObjectTrait for T
+    {
+    }
+
+    pub trait PhysicsObjectTrait:
+        Send
+        + Sync
+        + Object
+        + PhysicsObject
+        + IdentifiableTrait
+        + NamedTrait
+        + MasksTrait
+        + VelocityTrait
+        + SizeTrait
+        + PointTrait
+        + ShapeTrait
+    {
+    }
+    impl<
+        T: Send
+            + Sync
+            + Object
+            + PhysicsObject
+            + IdentifiableTrait
+            + NamedTrait
+            + MasksTrait
+            + VelocityTrait
+            + SizeTrait
+            + PointTrait
+            + ShapeTrait,
+    > PhysicsObjectTrait for T
+    {
+    }
 }
 
 pub mod structures {
@@ -41,10 +107,12 @@ pub mod structures {
 
     use crate::{
         units::{Point, Size, Velocity},
-        utils::util_items::gen_id,
+        utils::{shapes::CustomShape, util_items::gen_id},
     };
 
-    use super::traits::{Identifiable, Masks, Named};
+    use super::traits::{
+        IdentifiableTrait, MasksTrait, NamedTrait, PointTrait, ShapeTrait, SizeTrait, VelocityTrait,
+    };
 
     /// A static object with position and size
     // :StaticObject
@@ -54,11 +122,18 @@ pub mod structures {
         pub pos: Point,
         pub size: Size,
         pub masks: Vec<usize>,
+        pub shape: CustomShape,
     }
 
     impl StaticObject {
         /// Create a new StaticObject
-        pub fn new(name: String, pos: Point, size: Size, masks: Option<Vec<usize>>) -> Self {
+        pub fn new(
+            name: String,
+            pos: Point,
+            size: Size,
+            masks: Option<Vec<usize>>,
+            shape: CustomShape,
+        ) -> Self {
             let id = gen_id();
             Self {
                 id,
@@ -66,25 +141,44 @@ pub mod structures {
                 pos,
                 size,
                 masks: masks.unwrap_or_default(),
+                shape,
             }
         }
     }
 
-    impl Identifiable for StaticObject {
+    impl IdentifiableTrait for StaticObject {
         fn get_id(&self) -> Uuid {
             self.id
         }
     }
 
-    impl Named for StaticObject {
+    impl NamedTrait for StaticObject {
         fn get_name(&self) -> String {
             self.name.clone()
         }
     }
 
-    impl Masks for StaticObject {
+    impl MasksTrait for StaticObject {
         fn get_masks(&self) -> Vec<usize> {
             self.masks.clone()
+        }
+    }
+
+    impl SizeTrait for StaticObject {
+        fn get_size(&self) -> Size {
+            self.size
+        }
+    }
+
+    impl PointTrait for StaticObject {
+        fn get_pos(&self) -> Point {
+            self.pos
+        }
+    }
+
+    impl ShapeTrait for StaticObject {
+        fn get_shape(&self) -> CustomShape {
+            self.shape.clone()
         }
     }
 
@@ -97,6 +191,7 @@ pub mod structures {
         pub size: Size,
         pub masks: Vec<usize>,
         pub velocity: Velocity,
+        pub shape: CustomShape,
     }
 
     impl AnimatedObject {
@@ -106,6 +201,7 @@ pub mod structures {
             size: Size,
             velocity: Velocity,
             masks: Option<Vec<usize>>,
+            shape: CustomShape,
         ) -> Self {
             let id = gen_id();
             Self {
@@ -115,24 +211,49 @@ pub mod structures {
                 size,
                 masks: masks.unwrap_or_default(),
                 velocity,
+                shape,
             }
         }
     }
 
-    impl Identifiable for AnimatedObject {
+    impl IdentifiableTrait for AnimatedObject {
         fn get_id(&self) -> Uuid {
             self.id
         }
     }
-    impl Named for AnimatedObject {
+    impl NamedTrait for AnimatedObject {
         fn get_name(&self) -> String {
             self.name.clone()
         }
     }
 
-    impl Masks for AnimatedObject {
+    impl MasksTrait for AnimatedObject {
         fn get_masks(&self) -> Vec<usize> {
             self.masks.clone()
+        }
+    }
+
+    impl VelocityTrait for AnimatedObject {
+        fn get_velocity(&self) -> Velocity {
+            self.velocity
+        }
+    }
+
+    impl SizeTrait for AnimatedObject {
+        fn get_size(&self) -> Size {
+            self.size
+        }
+    }
+
+    impl PointTrait for AnimatedObject {
+        fn get_pos(&self) -> Point {
+            self.pos
+        }
+    }
+
+    impl ShapeTrait for AnimatedObject {
+        fn get_shape(&self) -> CustomShape {
+            self.shape.clone()
         }
     }
 }

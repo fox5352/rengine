@@ -9,34 +9,7 @@ pub mod util_items {
 }
 
 pub mod shapes {
-    pub struct Rectangle {
-        pub width: f32,
-        pub height: f32,
-    }
-
-    impl Rectangle {
-        pub fn new(value: (f32, f32)) -> Self {
-            Self {
-                width: value.0,
-                height: value.1,
-            }
-        }
-    }
-
-    pub struct Triangle {
-        pub width: f32,
-        pub height: f32,
-    }
-
-    impl Triangle {
-        pub fn new(value: (f32, f32)) -> Self {
-            Self {
-                width: value.0,
-                height: value.1,
-            }
-        }
-    }
-
+    #[derive(Debug, Clone, Default)]
     pub struct CustomShape {
         pub points: Vec<(f32, f32)>,
     }
@@ -45,5 +18,30 @@ pub mod shapes {
         pub fn new(points: Vec<(f32, f32)>) -> Self {
             Self { points }
         }
+
+        pub fn add_point(&mut self, point: (f32, f32)) {
+            self.points.push(point);
+        }
+
+        pub fn override_points(&mut self, points: Vec<(f32, f32)>) {
+            self.points = points;
+        }
+
+        pub fn gen_rectangle() -> Self {
+            Self {
+                points: vec![(0.0, 0.0), (0.0, 1.0), (1.0, 1.0), (1.0, 0.0), (0.0, 0.0)],
+            }
+        }
+
+        pub fn gen_triangle() -> Self {
+            Self {
+                points: vec![(0.0, 0.0), (0.5, 1.0), (1.0, 0.0), (0.0, 0.0)],
+            }
+        }
     }
+}
+
+// mod for cal colitions
+pub mod collision_cal {
+    use crate::units::{Point, Size};
 }
