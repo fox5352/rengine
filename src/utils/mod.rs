@@ -132,6 +132,7 @@ pub mod collision_cal {
         let obj1_world_points = transform_shape(&obj1.0, &obj1.1, &obj1.2);
         let obj2_world_points = transform_shape(&obj2.0, &obj2.1, &obj2.2);
 
+        // TODO: impl the res later my brain is fried rn
         false
     }
 }
