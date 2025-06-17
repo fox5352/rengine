@@ -34,7 +34,7 @@ impl Object for AnimatedObject {
 
 impl PhysicsObject for AnimatedObject {
     fn update(&mut self, delta_time: f32) {
-        self.pos.x += self.velocity.x * delta_time;
+        self.pos.x += (self.velocity.x * delta_time) as i128;
     }
     fn process(&mut self, delta_time: f32) {}
 }

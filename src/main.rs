@@ -4,10 +4,9 @@ use rengine::{
     scene::World,
     units::{Point, Size, Velocity},
 };
-use std::time::{Duration, Instant};
 
 fn main() {
-    let pos = Point::new(250.0, 250.0, None);
+    let pos = Point::new(250, 250, None);
     let size = Size::new(50.0, 50.0);
 
     let platform = Box::new(AnimatedObject::new(

@@ -1,15 +1,10 @@
 use std::{
-    collections::HashMap,
-    sync::{Arc, Mutex},
+    sync::Arc,
     thread::sleep,
     time::{Duration, Instant},
 };
 
-use crate::{
-    engine::traits::{Masks, PhysicsObjectTrait, StaticObjectTrait},
-    scene::World,
-    types::state_machines::GLOBAL_STATE,
-};
+use crate::{scene::World, types::state_machines::GLOBAL_STATE};
 
 /// Main game loop structure that manages timing and scene updates
 pub struct GameLoop {

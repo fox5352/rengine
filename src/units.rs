@@ -1,14 +1,14 @@
 /// A point with x, y and an optional degree for direction
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Point {
-    pub x: f32,
-    pub y: f32,
+    pub x: i128,
+    pub y: i128,
     pub deg: f32,
 }
 
 impl Point {
     /// Create a new Point; defaults deg to 0 if None provided
-    pub fn new(x: f32, y: f32, deg: Option<f32>) -> Self {
+    pub fn new(x: i128, y: i128, deg: Option<f32>) -> Self {
         Self {
             x,
             y,
