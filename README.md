@@ -24,7 +24,7 @@ To use **rengine**, clone the repository and build it with Cargo. It’s current
 
 ## Contributions
 
-Your feedback and contributions are welcome! Feel free to open issues or submit pull requests.
+Your feedback are welcome! Feel free to open issues.
 
 ## License
 
