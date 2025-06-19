@@ -1,12 +1,11 @@
-pub mod temp;
-pub mod types;
-pub mod utils;
-
 // Declare the modules so Rust knows about them
 pub mod engine; // Contains core game object definitions and traits
 pub mod manager;
-pub mod scene; // Defines the game world and holds collections of objects // Contains the game loop and manages object updates/input
+pub mod scene;
+pub mod types;
 pub mod units;
+pub mod utils; // Defines the game world and holds collections of objects // Contains the game loop and manages object updates/input
+pub mod window;
 
 use engine::{
     structures::{AnimatedObject, StaticObject},

@@ -6,6 +6,38 @@ use std::{
 
 use crate::{scene::World, types::state_machines::GLOBAL_STATE};
 
+fn populate_global_state(scene: &World) {
+    // Initialize vectors to store object IDs for quick lookup into the global state
+    let mut globale_state = GLOBAL_STATE.write().expect("Failed to lock global state");
+    // Build static objects lookup structures
+    scene.s_objects.iter().for_each(|obj| {
+        // Extract the unique ID from each static object
+        let id = obj
+            .lock()
+            .expect("Failed to lock on building static identifiables list")
+            .get_id()
+            .to_string();
+
+        // // Store ID in both vector and hash map for different access patterns
+        globale_state.s_identifiables.push(id.clone());
+        globale_state.insert_s_map(id.clone(), Arc::clone(&obj));
+    });
+
+    // Build active objects lookup structures
+    scene.a_objects.iter().for_each(|obj| {
+        // Extract the unique ID from each active/physics object
+        let id = obj
+            .lock()
+            .expect("Failed to lock on building active identifiables list")
+            .get_id()
+            .to_string();
+
+        // Store ID in both vector and hash map for different access patterns
+        globale_state.a_identifiables.push(id.clone());
+        globale_state.insert_a_map(id.clone(), Arc::clone(&obj));
+    });
+}
+
 /// Main game loop structure that manages timing and scene updates
 pub struct GameLoop {
     /// Tracks the last frame's timestamp for delta time calculation
@@ -20,6 +52,7 @@ impl GameLoop {
     /// # Arguments
     /// * `scene` - The World containing all game objects
     pub fn new(scene: World) -> Self {
+        populate_global_state(&scene);
         Self {
             last_time: Instant::now(),
             scene,
@@ -63,38 +96,6 @@ impl GameLoop {
 /// # Arguments
 /// * `scene` - The World containing all game objects to run
 pub fn run(scene: World) {
-    {
-        // Initialize vectors to store object IDs for quick lookup into the global state
-        let mut globale_state = GLOBAL_STATE.write().expect("Failed to lock global state");
-        // Build static objects lookup structures
-        scene.s_objects.iter().for_each(|obj| {
-            // Extract the unique ID from each static object
-            let id = obj
-                .lock()
-                .expect("Failed to lock on building static identifiables list")
-                .get_id()
-                .to_string();
-
-            // // Store ID in both vector and hash map for different access patterns
-            globale_state.s_identifiables.push(id.clone());
-            globale_state.insert_s_map(id.clone(), Arc::clone(&obj));
-        });
-
-        // Build active objects lookup structures
-        scene.a_objects.iter().for_each(|obj| {
-            // Extract the unique ID from each active/physics object
-            let id = obj
-                .lock()
-                .expect("Failed to lock on building active identifiables list")
-                .get_id()
-                .to_string();
-
-            // Store ID in both vector and hash map for different access patterns
-            globale_state.a_identifiables.push(id.clone());
-            globale_state.insert_a_map(id.clone(), Arc::clone(&obj));
-        });
-    }
-
     // Create the main game loop instance
     let mut game_loop = GameLoop::new(scene);
 

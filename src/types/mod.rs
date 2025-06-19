@@ -6,6 +6,11 @@
 
 use std::sync::{Arc, Mutex};
 
+use winit::{
+    event::{DeviceId, ElementState, KeyEvent},
+    keyboard::{KeyLocation, PhysicalKey},
+};
+
 /// A node in the singly linked list.
 ///
 /// Each node stores an `Arc<Mutex<T>>` value and a link to the next node.
@@ -355,5 +360,46 @@ mod tests {
         let length2 = *list.length.lock().unwrap();
 
         assert!(length2 == 3);
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct KeyAction {
+    pub phusical_key: PhysicalKey,
+    pub key_location: KeyLocation,
+    pub key_state: ElementState,
+    pub repeat: bool,
+    pub is_synthetic: bool,
+    pub device_id: DeviceId,
+}
+
+impl KeyAction {
+    pub fn new(
+        phusical_key: PhysicalKey,
+        key_location: KeyLocation,
+        key_state: ElementState,
+        repeat: bool,
+        is_synthetic: bool,
+        device_id: DeviceId,
+    ) -> Self {
+        Self {
+            phusical_key,
+            key_location,
+            key_state,
+            repeat,
+            is_synthetic,
+            device_id,
+        }
+    }
+
+    pub fn from_key_event(event: KeyEvent, is_synthetic: bool, device_id: DeviceId) -> Self {
+        Self {
+            phusical_key: event.physical_key,
+            key_location: event.location,
+            key_state: event.state,
+            repeat: event.repeat,
+            is_synthetic,
+            device_id,
+        }
     }
 }
