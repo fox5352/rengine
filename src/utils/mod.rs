@@ -9,7 +9,6 @@ pub mod util_items {
 }
 
 pub mod shapes {
-<<<<<<< HEAD
     #[derive(Debug, Clone)]
     pub enum CustomShapeVariant {
         Rectangle,
@@ -18,14 +17,11 @@ pub mod shapes {
         Other(String),
     }
 
-    #[derive(Debug, Clone)]
-=======
     /// A custom shape defined by a sequence of (x, y) coordinates.
     ///
     /// Coordinates are in normalized space where (0.0, 0.0) is the bottom-left
     /// and (1.0, 1.0) is the top-right of the shape's bounding box.
-    #[derive(Debug, Clone, Default)]
->>>>>>> main
+    #[derive(Debug, Clone)]
     pub struct CustomShape {
         /// The list of points that make up the shape, in drawing order.
         pub points: Vec<(f32, f32)>,
@@ -42,18 +38,13 @@ pub mod shapes {
     }
 
     impl CustomShape {
-<<<<<<< HEAD
-        pub fn new(points: Vec<(f32, f32)>, variant: CustomShapeVariant) -> Self {
-            Self { points, variant }
-=======
         /// Creates a new `CustomShape` from a given list of (x, y) points.
         ///
         /// # Arguments
         ///
         /// * `points` - A vector of points, where each point is a tuple (x, y) with values between 0.0 and 1.0.
-        pub fn new(points: Vec<(f32, f32)>) -> Self {
-            Self { points }
->>>>>>> main
+        pub fn new(points: Vec<(f32, f32)>, variant: CustomShapeVariant) -> Self {
+            Self { points, variant }
         }
 
         /// Adds a single point to the shape.
@@ -80,12 +71,8 @@ pub mod shapes {
         /// The shape is closed by repeating the starting point at the end.
         pub fn gen_rectangle() -> Self {
             Self {
-<<<<<<< HEAD
-                points: vec![(0.0, 0.0), (0.0, 1.0), (1.0, 1.0), (1.0, 0.0), (0.0, 0.0)],
                 variant: CustomShapeVariant::Rectangle,
-=======
                 points: vec![(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0), (0.0, 0.0)],
->>>>>>> main
             }
         }
 
@@ -230,7 +217,7 @@ mod test_collision_cal {
         utils::{collision_cal::check_collision, shapes::CustomShape},
     };
     //
-    use super::collision_cal::transform_shape;
+    /*     use super::collision_cal::transform_shape; */
 
     #[test]
     fn test_aabb_collision() {

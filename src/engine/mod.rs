@@ -40,6 +40,7 @@ pub mod traits {
     }
 
     pub trait PhysicsObject {
+        #[deprecated]
         fn update(&mut self, delta_time: f32);
         fn process(&mut self, delta_time: f32);
     }

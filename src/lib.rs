@@ -7,34 +7,4 @@ pub mod units;
 pub mod utils; // Defines the game world and holds collections of objects // Contains the game loop and manages object updates/input
 pub mod window;
 
-use engine::{
-    structures::{AnimatedObject, StaticObject},
-    traits::{Object, PhysicsObject},
-};
-
-use units::{Point, Size};
-
-impl Object for StaticObject {
-    fn set_pos(mut self, pos: Point) {
-        self.pos = pos;
-    }
-    fn set_size(mut self, size: Size) {
-        self.size = size;
-    }
-}
-
-impl Object for AnimatedObject {
-    fn set_pos(mut self, pos: Point) {
-        self.pos = pos;
-    }
-    fn set_size(mut self, size: Size) {
-        self.size = size;
-    }
-}
-
-impl PhysicsObject for AnimatedObject {
-    fn update(&mut self, delta_time: f32) {
-        self.pos.x += (self.velocity.x * delta_time) as i128;
-    }
-    fn process(&mut self, delta_time: f32) {}
-}
+pub mod scripts; // add custom scripts for objects here
