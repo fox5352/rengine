@@ -1,29 +1,39 @@
 use rengine::{
-    engine::structures::AnimatedObject,
+    engine::structures::{AnimatedObject, StaticObject},
     scene::World,
-    units::{Point, Size, Velocity},
+    units::{PointWithDeg, Size, Velocity},
     utils::shapes::CustomShape,
     window::start_window,
 };
 
 fn main() {
-    let pos = Point::new(250, 250, None);
+    let pos = PointWithDeg::new(250.0, 250.0, None);
     let size = Size::new(50.0, 50.0);
 
-    let platform = Box::new(AnimatedObject::new(
+    let floor = Box::new(StaticObject::new(
+        0,
+        String::from("Floor"),
+        PointWithDeg::new(400.0, 600.0, None),
+        Size::new(1400.0, 4.0),
+        Some(vec![1]),
+        CustomShape::gen_rectangle(),
+    ));
+
+    let moving_platform = Box::new(AnimatedObject::new(
+        0,
         String::from("Platform"),
         pos,
         size,
         Velocity { y: 0.0, x: 25.0 },
         Some(vec![1]),
-        CustomShape::gen_rectangle(),
+        CustomShape::gen_triangle(),
     ));
 
     let mut _world = World::new();
-    _world.add_animated(vec![platform]);
+    _world.add_static(vec![floor]);
+    _world.add_animated(vec![moving_platform]);
 
     start_window(_world);
-    /* run(_world); */
 
     // let mut game_loop = GameLoop::new(_world);
     //

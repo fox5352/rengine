@@ -188,7 +188,7 @@ pub mod state_machines {
     use crate::engine::traits::{PhysicsObjectTrait, StaticObjectTrait};
     use once_cell::sync::Lazy;
     use std::{
-        collections::{HashMap, LinkedList},
+        collections::HashMap,
         sync::{Arc, Mutex, RwLock},
     };
 
@@ -250,6 +250,10 @@ pub mod state_machines {
         /// Mask registry: 15 mask slots containing lists of associated string entries.
         masks: [Vec<String>; 15],
 
+        // ZIndex registry
+        pub s_z_index: [Vec<String>; 255],
+        pub a_z_index: [Vec<String>; 255],
+
         /// Identifiers for static objects (s_map keys).
         pub s_identifiables: Vec<String>,
 
@@ -266,10 +270,11 @@ pub mod state_machines {
     impl Default for GlobalStateMachine {
         /// Provides a default instance of the global state machine.
         fn default() -> Self {
-            let masks = [(); 15].map(|_| Vec::new());
             Self {
                 _state: GlobalState::Idle,
-                masks,
+                s_z_index: [(); 255].map(|_| Vec::new()),
+                a_z_index: [(); 255].map(|_| Vec::new()),
+                masks: [(); 15].map(|_| Vec::new()),
                 s_identifiables: Vec::new(),
                 a_identifiables: Vec::new(),
                 s_map: HashMap::new(),

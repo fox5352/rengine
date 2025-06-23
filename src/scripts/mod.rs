@@ -3,12 +3,11 @@ use crate::{
         structures::{AnimatedObject, StaticObject},
         traits::{Object, PhysicsObject},
     },
-    types::state_machines::get_current_input_action,
-    units::{Point, Size},
+    units::{PointWithDeg, Size},
 };
 
 impl Object for StaticObject {
-    fn set_pos(mut self, pos: Point) {
+    fn set_pos(mut self, pos: PointWithDeg) {
         self.pos = pos;
     }
     fn set_size(mut self, size: Size) {
@@ -17,7 +16,7 @@ impl Object for StaticObject {
 }
 
 impl Object for AnimatedObject {
-    fn set_pos(mut self, pos: Point) {
+    fn set_pos(mut self, pos: PointWithDeg) {
         self.pos = pos;
     }
     fn set_size(mut self, size: Size) {
@@ -26,16 +25,18 @@ impl Object for AnimatedObject {
 }
 
 impl PhysicsObject for AnimatedObject {
-    fn update(&mut self, _delta_time: f32) {
-        //     self.pos.x += (self.velocity.x * delta_time) as i128;
-    }
+    fn update(&mut self, _delta_time: f32) {}
 
     fn process(&mut self, delta_time: f32) {
-        if let Some(action) = get_current_input_action() {
-            println!(
-                "key:{} repeat:{} at:{}",
-                action.keycode, action.repeat, action.timestamp
-            );
-        }
+        self.pos.x += self.velocity.x * delta_time;
+        println!("updating pos of {}:{}", self.name, delta_time);
+        println!("updating pos to {}", self.pos.x);
+        //     self.pos.x += (self.velocity.x * delta_time) as i128;
+        //
+        //     let x = self.pos.x * self.size.x as i128;
+        //
+        //     if !(50..=600).contains(&x) {
+        //         self.velocity.x = -self.velocity.x;
+        //     }
     }
 }

@@ -138,11 +138,15 @@ mod test_shapes {
 
 // mod for cal colitions
 pub mod collision_cal {
-    use crate::units::{Point, Size};
+    use crate::units::{PointWithDeg, Size};
 
     use super::shapes::CustomShape;
 
-    pub fn transform_shape(point: &Point, size: &Size, shape: &CustomShape) -> Vec<(f32, f32)> {
+    pub fn transform_shape(
+        point: &PointWithDeg,
+        size: &Size,
+        shape: &CustomShape,
+    ) -> Vec<(f32, f32)> {
         let angle = point.deg.to_radians();
         let cos_theta = angle.cos();
         let sin_theta = angle.sin();
@@ -151,23 +155,22 @@ pub mod collision_cal {
             .points
             .iter()
             .map(|(px, py)| {
-                // x=0,y=0 left, bottom  x=1,y=1  right, top
-                // Step 1: Offset the shape so it's centered around (0,0)
+                // Flip the Y-axis at the normalized input level
                 let cx = px - 0.5;
-                let cy = py - 0.5;
+                let cy = 0.5 - py; // <-- Flip Y here
 
-                // Step 2: Scale it to object size
+                // Scale to object size
                 let sx = cx * size.x;
                 let sy = cy * size.y;
 
-                // Step 3: Rotate it around the center
+                // Rotate
                 let rx = sx * cos_theta - sy * sin_theta;
                 let ry = sx * sin_theta + sy * cos_theta;
 
-                // // Step 4: Move it to its position in the world
+                // Move to world position
                 let world_x = point.x as f32 + rx;
                 let world_y = point.y as f32 + ry;
-                //
+
                 (world_x, world_y)
             })
             .collect()
@@ -189,8 +192,8 @@ pub mod collision_cal {
     /// * `false` otherwise.
     #[allow(unused_variables)]
     pub fn check_collision(
-        obj1: (Point, Size, CustomShape),
-        obj2: (Point, Size, CustomShape),
+        obj1: (PointWithDeg, Size, CustomShape),
+        obj2: (PointWithDeg, Size, CustomShape),
     ) -> bool {
         let obj1_pos = obj1.0;
         let obj1_size = obj1.1;
@@ -213,7 +216,7 @@ pub mod collision_cal {
 #[cfg(test)]
 mod test_collision_cal {
     use crate::{
-        units::{Point, Size},
+        units::{PointWithDeg, Size},
         utils::{collision_cal::check_collision, shapes::CustomShape},
     };
     //
@@ -222,7 +225,7 @@ mod test_collision_cal {
     #[test]
     fn test_aabb_collision() {
         let obj1 = (
-            Point {
+            PointWithDeg {
                 x: 0,
                 y: 0,
                 deg: 0.0,
@@ -232,7 +235,7 @@ mod test_collision_cal {
         );
 
         let obj2 = (
-            Point {
+            PointWithDeg {
                 x: 5,
                 y: 5,
                 deg: 0.0,
@@ -247,7 +250,7 @@ mod test_collision_cal {
     #[test]
     fn test_aabb_no_collision() {
         let obj1 = (
-            Point {
+            PointWithDeg {
                 x: 0,
                 y: 0,
                 deg: 0.0,
@@ -257,7 +260,7 @@ mod test_collision_cal {
         );
 
         let obj2 = (
-            Point {
+            PointWithDeg {
                 x: 20,
                 y: 20,
                 deg: 0.0,

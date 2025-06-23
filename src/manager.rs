@@ -33,6 +33,11 @@ pub fn populate_global_state(scene: &World) {
         let id = static_obj.get_id().to_string();
         let mask_indices = static_obj.get_masks();
 
+        // z_index
+        let z_index = static_obj.get_z_index();
+
+        global_state.s_z_index[z_index as usize].push(id.clone());
+
         // Register object in appropriate masks
         for index in mask_indices {
             if let Err(e) = global_state.append_mask(index, id.clone()) {
@@ -53,6 +58,9 @@ pub fn populate_global_state(scene: &World) {
 
         let id = physics_obj.get_id().to_string();
         let mask_indices = physics_obj.get_masks();
+
+        let z_index = physics_obj.get_z_index();
+        global_state.a_z_index[z_index as usize].push(id.clone());
 
         // Register object in appropriate masks
         for index in mask_indices {

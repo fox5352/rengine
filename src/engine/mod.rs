@@ -1,9 +1,13 @@
 pub mod traits {
     use crate::{
-        units::{Point, Size, Velocity},
+        units::{PointWithDeg, Size, Velocity},
         utils::shapes::CustomShape,
     };
     use uuid::Uuid;
+
+    pub trait ZIndexTrait {
+        fn get_z_index(&self) -> u8;
+    }
 
     pub trait IdentifiableTrait {
         fn get_id(&self) -> Uuid;
@@ -30,13 +34,13 @@ pub mod traits {
     }
 
     pub trait PointTrait {
-        fn get_pos(&self) -> Point;
+        fn get_pos(&self) -> PointWithDeg;
     }
 
     /// The `engine` module defines game objects and their traits.
     pub trait Object {
         fn set_size(self, size: Size);
-        fn set_pos(self, pos: Point);
+        fn set_pos(self, pos: PointWithDeg);
     }
 
     pub trait PhysicsObject {
@@ -49,6 +53,7 @@ pub mod traits {
     pub trait StaticObjectTrait:
         Send
         + Sync
+        + ZIndexTrait
         + Object
         + IdentifiableTrait
         + NamedTrait
@@ -61,6 +66,7 @@ pub mod traits {
     impl<
         T: Send
             + Sync
+            + ZIndexTrait
             + Object
             + IdentifiableTrait
             + NamedTrait
@@ -75,6 +81,7 @@ pub mod traits {
     pub trait PhysicsObjectTrait:
         Send
         + Sync
+        + ZIndexTrait
         + Object
         + PhysicsObject
         + IdentifiableTrait
@@ -89,6 +96,7 @@ pub mod traits {
     impl<
         T: Send
             + Sync
+            + ZIndexTrait
             + Object
             + PhysicsObject
             + IdentifiableTrait
@@ -107,20 +115,22 @@ pub mod structures {
     use uuid::Uuid;
 
     use crate::{
-        units::{Point, Size, Velocity},
+        units::{PointWithDeg, Size, Velocity},
         utils::{shapes::CustomShape, util_items::gen_id},
     };
 
     use super::traits::{
-        IdentifiableTrait, MasksTrait, NamedTrait, PointTrait, ShapeTrait, SizeTrait, VelocityTrait,
+        IdentifiableTrait, MasksTrait, NamedTrait, PointTrait, ShapeTrait, SizeTrait,
+        VelocityTrait, ZIndexTrait,
     };
 
     /// A static object with position and size
     // :StaticObject
     pub struct StaticObject {
+        pub z_index: u8,
         pub id: Uuid,
         pub name: String,
-        pub pos: Point,
+        pub pos: PointWithDeg,
         pub size: Size,
         pub masks: Vec<usize>,
         pub shape: CustomShape,
@@ -129,14 +139,16 @@ pub mod structures {
     impl StaticObject {
         /// Create a new StaticObject
         pub fn new(
+            z_index: u8,
             name: String,
-            pos: Point,
+            pos: PointWithDeg,
             size: Size,
             masks: Option<Vec<usize>>,
             shape: CustomShape,
         ) -> Self {
             let id = gen_id();
             Self {
+                z_index,
                 id,
                 name,
                 pos,
@@ -144,6 +156,12 @@ pub mod structures {
                 masks: masks.unwrap_or_default(),
                 shape,
             }
+        }
+    }
+
+    impl ZIndexTrait for StaticObject {
+        fn get_z_index(&self) -> u8 {
+            self.z_index
         }
     }
 
@@ -172,7 +190,7 @@ pub mod structures {
     }
 
     impl PointTrait for StaticObject {
-        fn get_pos(&self) -> Point {
+        fn get_pos(&self) -> PointWithDeg {
             self.pos
         }
     }
@@ -186,9 +204,10 @@ pub mod structures {
     /// Placeholder for animated objects (not implemented)
     #[derive(Default)]
     pub struct AnimatedObject {
+        pub z_index: u8,
         pub id: Uuid,
         pub name: String,
-        pub pos: Point,
+        pub pos: PointWithDeg,
         pub size: Size,
         pub masks: Vec<usize>,
         pub velocity: Velocity,
@@ -197,8 +216,9 @@ pub mod structures {
 
     impl AnimatedObject {
         pub fn new(
+            z_index: u8,
             name: String,
-            pos: Point,
+            pos: PointWithDeg,
             size: Size,
             velocity: Velocity,
             masks: Option<Vec<usize>>,
@@ -206,6 +226,7 @@ pub mod structures {
         ) -> Self {
             let id = gen_id();
             Self {
+                z_index,
                 id,
                 name,
                 pos,
@@ -214,6 +235,12 @@ pub mod structures {
                 velocity,
                 shape,
             }
+        }
+    }
+
+    impl ZIndexTrait for AnimatedObject {
+        fn get_z_index(&self) -> u8 {
+            self.z_index
         }
     }
 
@@ -247,7 +274,7 @@ pub mod structures {
     }
 
     impl PointTrait for AnimatedObject {
-        fn get_pos(&self) -> Point {
+        fn get_pos(&self) -> PointWithDeg {
             self.pos
         }
     }

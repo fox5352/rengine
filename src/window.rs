@@ -3,13 +3,14 @@ use std::time::{Duration, Instant};
 
 // SDL2 drawing and rectangle
 use sdl2::pixels::Color;
-use sdl2::rect::Rect;
+use sdl2::rect::Point;
 
 // Game logic modules you’ve built
 use crate::manager::GameLoop;
 use crate::scene::World;
 use crate::types::KeyAction;
-use crate::types::state_machines::push_input_action;
+use crate::types::state_machines::{GLOBAL_STATE, push_input_action};
+use crate::utils::collision_cal::transform_shape;
 
 // Target ~60 FPS => 1_000_000 µs / 60 ≈ 16,666 µs
 const FRAME_TIME: Duration = Duration::from_micros(16_666);
@@ -56,6 +57,53 @@ impl Renderer {
     pub fn clear(&mut self) {
         self.canvas.set_draw_color(Color::RGBA(0, 0, 0, 0));
         self.canvas.clear();
+    }
+
+    pub fn render(&mut self) {
+        let global_state = GLOBAL_STATE.write().expect("Failed to lock global state");
+
+        for row in 0..255 {
+            for a_obj_id in global_state.s_z_index[row].iter() {
+                // TODO: draw static object
+                let id = a_obj_id.clone().to_string();
+
+                if let Some(obj) = global_state.get_s_map_value(&id) {
+                    let obj = obj.lock().unwrap();
+
+                    println!("drawing {}", obj.get_name());
+
+                    let cords: Vec<Point> =
+                        transform_shape(&obj.get_pos(), &obj.get_size(), &obj.get_shape())
+                            .iter()
+                            .map(|(x, y)| Point::new(*x as i32, *y as i32))
+                            .collect();
+
+                    self.canvas.set_draw_color(Color::RGBA(255, 0, 24, 255));
+                    self.canvas.draw_lines(&cords[..]).unwrap();
+                }
+            }
+
+            for a_col_id in global_state.a_z_index[row].iter() {
+                // TODO: draw animated object
+                let id = a_col_id.clone().to_string();
+
+                if let Some(obj) = global_state.get_a_map_value(&id) {
+                    let obj = obj.lock().unwrap();
+
+                    println!("drawing {}", obj.get_name());
+
+                    let cords: Vec<Point> =
+                        transform_shape(&obj.get_pos(), &obj.get_size(), &obj.get_shape())
+                            .iter()
+                            .map(|(x, y)| Point::new(*x as i32, *y as i32))
+                            .collect();
+
+                    self.canvas.set_draw_color(Color::RGBA(204, 85, 0, 255));
+
+                    self.canvas.draw_lines(&cords[..]).unwrap();
+                }
+            }
+        }
     }
 
     pub fn present(&mut self) {
@@ -114,22 +162,25 @@ pub fn start_window(scene: World) {
         }
 
         // Update game state (e.g., physics, AI, etc.)
+        #[cfg(debug_assertions)]
+        {
+            println!("Updating game state");
+        }
         game_state.update();
 
         // Clear the screen to black
+        #[cfg(debug_assertions)]
+        {
+            println!("Clearing screen");
+        }
         renderer.clear();
 
-        // ----- DRAWING START -----
-        renderer.execute_func(|canvas| {
-            canvas.set_draw_color(Color::RGBA(255, 0, 0, 255)); // Full red, fully opaque
-            canvas.fill_rect(Rect::new(100, 100, 200, 150)).unwrap();
-
-            canvas.set_draw_color(Color::RGBA(0, 0, 255, 255)); // Blue opaque
-            canvas.fill_rect(Rect::new(350, 200, 100, 100)).unwrap();
-
-            canvas.set_draw_color(Color::RGBA(0, 255, 0, 255)); // Green opaque
-            canvas.draw_rect(Rect::new(500, 100, 150, 100)).unwrap();
-        });
+        // // ----- DRAWING START -----
+        #[cfg(debug_assertions)]
+        {
+            println!("Drawing");
+        }
+        renderer.render();
         // You can draw more shapes here!
         // ----- DRAWING END -----
 
