@@ -1,6 +1,7 @@
 // Standard lib imports for timekeeping
 use std::time::{Duration, Instant};
 
+use crossbeam::channel;
 // SDL2 drawing and rectangle
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
@@ -8,6 +9,8 @@ use sdl2::rect::Rect;
 // Game logic modules you’ve built
 use crate::manager::GameLoop;
 use crate::scene::World;
+use crate::types::KeyAction;
+use crate::types::state_machines::{INPUT_ACTION, push_input_action};
 
 // Target ~60 FPS => 1_000_000 µs / 60 ≈ 16,666 µs
 const FRAME_TIME: Duration = Duration::from_micros(16_666);
@@ -54,6 +57,8 @@ pub fn start_window(scene: World) {
     // Game state holds your world/scene logic
     let mut game_state = GameLoop::new(scene);
 
+    // imput stuff
+
     // Main game/render loop
     'window_loop: loop {
         let start_time_of_frame = Instant::now();
@@ -66,7 +71,18 @@ pub fn start_window(scene: World) {
                     break 'window_loop;
                 }
                 // You can expand this to handle keys, mouse, etc.
-                sdl2::event::Event::KeyDown { .. } => {}
+                sdl2::event::Event::KeyDown {
+                    timestamp,
+                    window_id,
+                    keycode: Some(keycode),
+                    scancode: _,
+                    keymod,
+                    repeat,
+                } => {
+                    push_input_action(KeyAction::new(
+                        window_id, keycode, keymod, repeat, timestamp,
+                    ));
+                }
                 _ => (),
             }
         }
@@ -106,4 +122,3 @@ pub fn start_window(scene: World) {
         }
     }
 }
-

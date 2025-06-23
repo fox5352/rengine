@@ -6,10 +6,7 @@
 
 use std::sync::{Arc, Mutex};
 
-use winit::{
-    event::{DeviceId, ElementState, KeyEvent},
-    keyboard::{KeyLocation, PhysicalKey},
-};
+use sdl2::keyboard::{Keycode, Mod};
 
 /// A node in the singly linked list.
 ///
@@ -187,13 +184,55 @@ impl<'a, T> IntoIterator for &'a List<T> {
 }
 
 pub mod state_machines {
+    use super::KeyAction;
+    use crate::engine::traits::{PhysicsObjectTrait, StaticObjectTrait};
     use once_cell::sync::Lazy;
     use std::{
-        collections::HashMap,
+        collections::{HashMap, LinkedList},
         sync::{Arc, Mutex, RwLock},
     };
 
-    use crate::engine::traits::{PhysicsObjectTrait, StaticObjectTrait};
+    /// Central state machine for handling input actions.
+    #[derive(Default)]
+    pub struct InputAction {
+        stack: Arc<Mutex<Option<KeyAction>>>,
+    }
+
+    impl InputAction {
+        pub fn new() -> Self {
+            Self::default()
+        }
+
+        pub fn push(&self, action: KeyAction) {
+            self.stack.lock().unwrap().replace(action);
+        }
+
+        pub fn pop(&self) -> Option<KeyAction> {
+            self.stack.lock().unwrap().take()
+        }
+    }
+
+    /// Thread-safe, Lazily-initialized input action state shared across the program.
+    pub static INPUT_ACTION: Lazy<Arc<RwLock<InputAction>>> =
+        Lazy::new(|| Arc::new(RwLock::new(InputAction::new())));
+
+    /// Public API to get input action from stack.
+    pub fn get_current_input_action() -> Option<KeyAction> {
+        INPUT_ACTION
+            .read()
+            .map_err(|e| format!("RwLock poisoned: {}", e))
+            .unwrap()
+            .pop()
+    }
+
+    /// Public API to push input action to stack.
+    pub fn push_input_action(action: KeyAction) {
+        INPUT_ACTION
+            .write()
+            .map_err(|e| format!("RwLock poisoned: {}", e))
+            .unwrap()
+            .push(action);
+    }
 
     /// Represents the global state of the application or system.
     #[derive(Debug)]
@@ -407,41 +446,27 @@ mod tests {
 
 #[derive(Debug, Clone)]
 pub struct KeyAction {
-    pub phusical_key: PhysicalKey,
-    pub key_location: KeyLocation,
-    pub key_state: ElementState,
+    pub keycode: Keycode,
+    pub window_id: u32,
+    pub key_mod: Mod,
     pub repeat: bool,
-    pub is_synthetic: bool,
-    pub device_id: DeviceId,
+    pub timestamp: u32,
 }
 
 impl KeyAction {
     pub fn new(
-        phusical_key: PhysicalKey,
-        key_location: KeyLocation,
-        key_state: ElementState,
+        window_id: u32,
+        keycode: Keycode,
+        key_mod: Mod,
         repeat: bool,
-        is_synthetic: bool,
-        device_id: DeviceId,
+        timestamp: u32,
     ) -> Self {
         Self {
-            phusical_key,
-            key_location,
-            key_state,
+            keycode,
+            window_id,
+            key_mod,
             repeat,
-            is_synthetic,
-            device_id,
-        }
-    }
-
-    pub fn from_key_event(event: KeyEvent, is_synthetic: bool, device_id: DeviceId) -> Self {
-        Self {
-            phusical_key: event.physical_key,
-            key_location: event.location,
-            key_state: event.state,
-            repeat: event.repeat,
-            is_synthetic,
-            device_id,
+            timestamp,
         }
     }
 }

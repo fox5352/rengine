@@ -119,7 +119,7 @@ impl GameLoop {
 
         // Update physics (active) objects
         self.scene.a_objects.iter().for_each(|obj| {
-            obj.lock().unwrap().update(delta_time);
+            obj.lock().unwrap().process(delta_time);
         });
     }
 }
