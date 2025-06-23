@@ -1,111 +1,109 @@
-use std::sync::{Arc, Mutex};
+// Standard lib imports for timekeeping
 use std::time::{Duration, Instant};
 
+// SDL2 drawing and rectangle
+use sdl2::pixels::Color;
+use sdl2::rect::Rect;
+
+// Game logic modules you’ve built
 use crate::manager::GameLoop;
 use crate::scene::World;
-use crate::types::KeyAction;
-use winit::application::ApplicationHandler;
-use winit::event::WindowEvent;
-use winit::event_loop::{ActiveEventLoop, ControlFlow, EventLoop};
-use winit::window::{Window, WindowId};
 
+// Target ~60 FPS => 1_000_000 µs / 60 ≈ 16,666 µs
 const FRAME_TIME: Duration = Duration::from_micros(16_666);
 
-struct App {
-    window: Option<Arc<Mutex<Window>>>,
-    game_loop: Option<GameLoop>,
-    last_physics_tick: Instant,
-}
-
-impl App {
-    fn new(scene: World) -> Self {
-        Self {
-            window: None,
-            game_loop: Some(GameLoop::new(scene)),
-            last_physics_tick: Instant::now(),
-        }
+// Helper function to panic with message if SDL init fails
+fn window_match_helper<T, E>(result: Result<T, E>, error_message: &str) -> T
+where
+    E: std::fmt::Display,
+{
+    match result {
+        Ok(value) => value,
+        Err(e) => panic!("{}: {}", error_message, e),
     }
 }
 
-impl ApplicationHandler for App {
-    fn resumed(&mut self, event_loop: &ActiveEventLoop) {
-        let window = event_loop
-            .create_window(Window::default_attributes())
-            .expect("Failed to create window");
-
-        self.window = Some(Arc::new(Mutex::new(window)));
-
-        if let Some(window_arc) = &self.window {
-            let _size = window_arc
-                .lock()
-                .expect("falied to initialize window size")
-                .inner_size();
-        }
-    }
-
-    fn window_event(&mut self, event_loop: &ActiveEventLoop, _id: WindowId, event: WindowEvent) {
-        match event {
-            WindowEvent::CloseRequested => {
-                println!("The close button was pressed; stopping");
-                event_loop.exit();
-            }
-            WindowEvent::RedrawRequested => {
-                // This is the render step
-                // TODO: Call your draw function here
-                // e.g., self.game_loop.as_mut().unwrap().draw();
-
-                // Then request another redraw
-                if let Some(window_arc) = &self.window {
-                    window_arc
-                        .lock()
-                        .expect("Failed to lock window on request redraw")
-                        .request_redraw();
-                }
-            }
-            WindowEvent::KeyboardInput {
-                device_id,
-                event,
-                is_synthetic,
-            } => {
-                let key_action = KeyAction::from_key_event(event, is_synthetic, device_id);
-
-                // println!(
-                //     "KeyboardInput, event: {:?}, is_synthetic: {}",
-                //     event, is_synthetic
-                // );
-            }
-            _ => (),
-        }
-    }
-
-    fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {
-        if let Some(game_loop) = self.game_loop.as_mut() {
-            let now = Instant::now();
-            let elapsed = now.duration_since(self.last_physics_tick);
-
-            if elapsed >= FRAME_TIME {
-                game_loop.update(); // fixed-timestep update
-                self.last_physics_tick = now;
-            }
-        }
-
-        if let Some(window_arc) = &self.window {
-            window_arc
-                .lock()
-                .expect("Failed to lock window on about to wait")
-                .request_redraw();
-        }
-    }
-}
-
+// Main entry point for rendering a scene
 pub fn start_window(scene: World) {
-    let event_loop = EventLoop::new().unwrap();
+    // Initialize SDL2 context and video system
+    let sdl_context = window_match_helper(sdl2::init(), "Failed to initialize SDL context");
+    let video_subsystem = window_match_helper(
+        sdl_context.video(),
+        "Failed to initialize SDL video subsystem",
+    );
 
-    event_loop.set_control_flow(ControlFlow::Poll);
+    // Create the main game window
+    let window = window_match_helper(
+        video_subsystem
+            .window("Rengine", 800, 600)
+            .position_centered()
+            .build(),
+        "Failed to create window",
+    );
 
-    let mut app = App::new(scene);
+    // Create canvas for rendering
+    let mut canvas = window_match_helper(
+        window.into_canvas().accelerated().build(),
+        "Failed to create canvas",
+    );
 
-    event_loop
-        .run_app(&mut app)
-        .expect("event window loop failed");
+    // Event handler for input (quit, keyboard, etc.)
+    let mut event_pump =
+        window_match_helper(sdl_context.event_pump(), "Failed to create event pump");
+
+    // Game state holds your world/scene logic
+    let mut game_state = GameLoop::new(scene);
+
+    // Main game/render loop
+    'window_loop: loop {
+        let start_time_of_frame = Instant::now();
+
+        // Input handling
+        for event in event_pump.poll_iter() {
+            match event {
+                sdl2::event::Event::Quit { timestamp } => {
+                    println!("Quit at {} seconds", timestamp);
+                    break 'window_loop;
+                }
+                // You can expand this to handle keys, mouse, etc.
+                sdl2::event::Event::KeyDown { .. } => {}
+                _ => (),
+            }
+        }
+
+        // Update game state (e.g., physics, AI, etc.)
+        game_state.update();
+
+        // Clear the screen to black
+        canvas.set_draw_color(Color::RGBA(0, 0, 0, 1));
+        canvas.clear();
+
+        // ----- DRAWING START -----
+        // Red filled rect
+        canvas.set_draw_color(Color::RGB(255, 0, 0));
+        canvas.fill_rect(Rect::new(100, 100, 200, 150)).unwrap();
+
+        // Blue filled square
+        canvas.set_draw_color(Color::RGB(0, 0, 255));
+        canvas.fill_rect(Rect::new(350, 200, 100, 100)).unwrap();
+
+        // Green outlined rectangle
+        canvas.set_draw_color(Color::RGB(0, 255, 0));
+        canvas.draw_rect(Rect::new(500, 100, 150, 100)).unwrap();
+
+        canvas.present();
+
+        // You can draw more shapes here!
+        // ----- DRAWING END -----
+
+        // Present (flip the screen)
+        canvas.present();
+
+        // Frame limiting to ~60 FPS
+        let elapsed = start_time_of_frame.elapsed();
+        if elapsed < FRAME_TIME {
+            std::thread::sleep(FRAME_TIME - elapsed);
+        }
+    }
 }
+

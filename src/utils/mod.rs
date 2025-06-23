@@ -9,14 +9,32 @@ pub mod util_items {
 }
 
 pub mod shapes {
-    #[derive(Debug, Clone, Default)]
+    #[derive(Debug, Clone)]
+    pub enum CustomShapeVariant {
+        Rectangle,
+        Triangle,
+        Circle,
+        Other(String),
+    }
+
+    #[derive(Debug, Clone)]
     pub struct CustomShape {
         pub points: Vec<(f32, f32)>,
+        pub variant: CustomShapeVariant,
+    }
+
+    impl Default for CustomShape {
+        fn default() -> Self {
+            Self {
+                points: vec![(0.0, 0.0), (0.0, 1.0), (1.0, 1.0), (1.0, 0.0), (0.0, 0.0)],
+                variant: CustomShapeVariant::Rectangle,
+            }
+        }
     }
 
     impl CustomShape {
-        pub fn new(points: Vec<(f32, f32)>) -> Self {
-            Self { points }
+        pub fn new(points: Vec<(f32, f32)>, variant: CustomShapeVariant) -> Self {
+            Self { points, variant }
         }
 
         pub fn add_point(&mut self, point: (f32, f32)) {
@@ -30,12 +48,14 @@ pub mod shapes {
         pub fn gen_rectangle() -> Self {
             Self {
                 points: vec![(0.0, 0.0), (0.0, 1.0), (1.0, 1.0), (1.0, 0.0), (0.0, 0.0)],
+                variant: CustomShapeVariant::Rectangle,
             }
         }
 
         pub fn gen_triangle() -> Self {
             Self {
                 points: vec![(0.0, 0.0), (0.5, 1.0), (1.0, 0.0), (0.0, 0.0)],
+                variant: CustomShapeVariant::Triangle,
             }
         }
     }

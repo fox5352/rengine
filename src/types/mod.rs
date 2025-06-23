@@ -195,6 +195,7 @@ pub mod state_machines {
 
     use crate::engine::traits::{PhysicsObjectTrait, StaticObjectTrait};
 
+    /// Represents the global state of the application or system.
     #[derive(Debug)]
     pub enum GlobalState {
         Processing,
@@ -202,18 +203,31 @@ pub mod state_machines {
         Error(String),
     }
 
+    /// Central state machine holding globally accessible resources and metadata.
     pub struct GlobalStateMachine {
+        /// Current internal state (e.g., Idle, Processing, or Error).
         _state: GlobalState,
+
+        /// Mask registry: 15 mask slots containing lists of associated string entries.
         masks: [Vec<String>; 15],
+
+        /// Identifiers for static objects (s_map keys).
         pub s_identifiables: Vec<String>,
+
+        /// Identifiers for physics objects (a_map keys).
         pub a_identifiables: Vec<String>,
+
+        /// Map from identifiers to static objects.
         s_map: HashMap<String, Arc<Mutex<Box<dyn StaticObjectTrait>>>>,
+
+        /// Map from identifiers to active physics objects.
         a_map: HashMap<String, Arc<Mutex<Box<dyn PhysicsObjectTrait>>>>,
     }
 
     impl Default for GlobalStateMachine {
+        /// Provides a default instance of the global state machine.
         fn default() -> Self {
-            let masks: [Vec<String>; 15] = [(); 15].map(|_| vec![]);
+            let masks = [(); 15].map(|_| Vec::new());
             Self {
                 _state: GlobalState::Idle,
                 masks,
@@ -226,14 +240,21 @@ pub mod state_machines {
     }
 
     impl GlobalStateMachine {
+        /// Creates a new global state machine.
         pub fn new() -> Self {
             Self::default()
         }
 
-        // Changed to &mut self so we can modify
+        /// Appends an item to a given mask index (1-based).
+        ///
+        /// # Arguments
+        /// * `mask` - Index from 1 to 15 (inclusive).
+        /// * `item` - String to append to the selected mask.
+        ///
+        /// # Errors
+        /// Returns an error if the index is out of bounds.
         pub fn append_mask(&mut self, mask: usize, item: String) -> Result<(), String> {
             let index = mask.checked_sub(1).ok_or("mask must be >= 1")?;
-
             if index >= 15 {
                 return Err("mask out of range, must be between 1 and 15".to_string());
             }
@@ -242,6 +263,10 @@ pub mod state_machines {
             Ok(())
         }
 
+        /// Inserts a new static object into the static map.
+        ///
+        /// # Panics
+        /// Panics if the key already exists.
         pub fn insert_s_map(&mut self, key: String, value: Arc<Mutex<Box<dyn StaticObjectTrait>>>) {
             if self.s_map.contains_key(&key) {
                 panic!("Duplicate ID '{}' in s_map", key);
@@ -250,6 +275,10 @@ pub mod state_machines {
             self.s_map.insert(key, value);
         }
 
+        /// Inserts a new physics object into the active map.
+        ///
+        /// # Panics
+        /// Panics if the key already exists.
         pub fn insert_a_map(
             &mut self,
             key: String,
@@ -262,10 +291,12 @@ pub mod state_machines {
             self.a_map.insert(key, value);
         }
 
+        /// Retrieves a static object by key.
         pub fn get_s_map_value(&self, key: &str) -> Option<Arc<Mutex<Box<dyn StaticObjectTrait>>>> {
             self.s_map.get(key).cloned()
         }
 
+        /// Retrieves a physics object by key.
         pub fn get_a_map_value(
             &self,
             key: &str,
@@ -273,26 +304,37 @@ pub mod state_machines {
             self.a_map.get(key).cloned()
         }
 
+        /// Returns a reference to the internal mask list.
         pub fn get_masks(&self) -> &[Vec<String>; 15] {
             &self.masks
         }
     }
 
-    // Safe global shared instance, no `mut`
+    /// Thread-safe, lazily-initialized global state shared across the program.
     pub static GLOBAL_STATE: Lazy<Arc<RwLock<GlobalStateMachine>>> =
         Lazy::new(|| Arc::new(RwLock::new(GlobalStateMachine::new())));
 
+    /// Public API to append a mask to the global state.
+    ///
+    /// # Errors
+    /// Returns an error if the lock is poisoned or if the mask index is invalid.
     pub fn append_mask(mask: usize, item: String) -> Result<(), String> {
         let mut state = GLOBAL_STATE
             .write()
             .map_err(|e| format!("RwLock poisoned: {}", e))?;
+
         state.append_mask(mask, item)
     }
 
+    /// Public API to get the current list of all masks.
+    ///
+    /// # Errors
+    /// Returns an error if the lock is poisoned.
     pub fn get_masks() -> Result<[Vec<String>; 15], String> {
         let state = GLOBAL_STATE
             .read()
             .map_err(|e| format!("RwLock poisoned: {}", e))?;
+
         Ok(state.get_masks().clone())
     }
 }
