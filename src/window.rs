@@ -1,7 +1,6 @@
 // Standard lib imports for timekeeping
 use std::time::{Duration, Instant};
 
-use crossbeam::channel;
 // SDL2 drawing and rectangle
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
@@ -10,7 +9,7 @@ use sdl2::rect::Rect;
 use crate::manager::GameLoop;
 use crate::scene::World;
 use crate::types::KeyAction;
-use crate::types::state_machines::{INPUT_ACTION, push_input_action};
+use crate::types::state_machines::push_input_action;
 
 // Target ~60 FPS => 1_000_000 µs / 60 ≈ 16,666 µs
 const FRAME_TIME: Duration = Duration::from_micros(16_666);
@@ -26,29 +25,56 @@ where
     }
 }
 
+pub struct Renderer {
+    canvas: sdl2::render::Canvas<sdl2::video::Window>,
+}
+
+impl Renderer {
+    pub fn new(sdl_context: &sdl2::Sdl) -> Self {
+        let video_subsystem = window_match_helper(
+            sdl_context.video(),
+            "Failed to initialize SDL video subsystem",
+        );
+        // Create the main game window
+        let window = window_match_helper(
+            video_subsystem
+                .window("Rengine", 800, 600)
+                .position_centered()
+                .resizable()
+                .build(),
+            "Failed to create window",
+        );
+
+        let canvas = window_match_helper(
+            window.into_canvas().accelerated().build(),
+            "Failed to create canvas",
+        );
+
+        Self { canvas }
+    }
+
+    pub fn clear(&mut self) {
+        self.canvas.set_draw_color(Color::RGBA(0, 0, 0, 0));
+        self.canvas.clear();
+    }
+
+    pub fn present(&mut self) {
+        self.canvas.present();
+    }
+
+    pub fn execute_func<F>(&mut self, func: F)
+    where
+        F: FnOnce(&mut sdl2::render::Canvas<sdl2::video::Window>),
+    {
+        func(&mut self.canvas);
+    }
+}
+
 // Main entry point for rendering a scene
 pub fn start_window(scene: World) {
     // Initialize SDL2 context and video system
     let sdl_context = window_match_helper(sdl2::init(), "Failed to initialize SDL context");
-    let video_subsystem = window_match_helper(
-        sdl_context.video(),
-        "Failed to initialize SDL video subsystem",
-    );
-
-    // Create the main game window
-    let window = window_match_helper(
-        video_subsystem
-            .window("Rengine", 800, 600)
-            .position_centered()
-            .build(),
-        "Failed to create window",
-    );
-
-    // Create canvas for rendering
-    let mut canvas = window_match_helper(
-        window.into_canvas().accelerated().build(),
-        "Failed to create canvas",
-    );
+    let mut renderer = Renderer::new(&sdl_context);
 
     // Event handler for input (quit, keyboard, etc.)
     let mut event_pump =
@@ -91,29 +117,24 @@ pub fn start_window(scene: World) {
         game_state.update();
 
         // Clear the screen to black
-        canvas.set_draw_color(Color::RGBA(0, 0, 0, 1));
-        canvas.clear();
+        renderer.clear();
 
         // ----- DRAWING START -----
-        // Red filled rect
-        canvas.set_draw_color(Color::RGB(255, 0, 0));
-        canvas.fill_rect(Rect::new(100, 100, 200, 150)).unwrap();
+        renderer.execute_func(|canvas| {
+            canvas.set_draw_color(Color::RGBA(255, 0, 0, 255)); // Full red, fully opaque
+            canvas.fill_rect(Rect::new(100, 100, 200, 150)).unwrap();
 
-        // Blue filled square
-        canvas.set_draw_color(Color::RGB(0, 0, 255));
-        canvas.fill_rect(Rect::new(350, 200, 100, 100)).unwrap();
+            canvas.set_draw_color(Color::RGBA(0, 0, 255, 255)); // Blue opaque
+            canvas.fill_rect(Rect::new(350, 200, 100, 100)).unwrap();
 
-        // Green outlined rectangle
-        canvas.set_draw_color(Color::RGB(0, 255, 0));
-        canvas.draw_rect(Rect::new(500, 100, 150, 100)).unwrap();
-
-        canvas.present();
-
+            canvas.set_draw_color(Color::RGBA(0, 255, 0, 255)); // Green opaque
+            canvas.draw_rect(Rect::new(500, 100, 150, 100)).unwrap();
+        });
         // You can draw more shapes here!
         // ----- DRAWING END -----
 
         // Present (flip the screen)
-        canvas.present();
+        renderer.present();
 
         // Frame limiting to ~60 FPS
         let elapsed = start_time_of_frame.elapsed();
