@@ -28,15 +28,8 @@ impl PhysicsObject for AnimatedObject {
     fn update(&mut self, _delta_time: f32) {}
 
     fn process(&mut self, delta_time: f32) {
-        self.pos.x += self.velocity.x * delta_time;
-        println!("updating pos of {}:{}", self.name, delta_time);
-        println!("updating pos to {}", self.pos.x);
-        //     self.pos.x += (self.velocity.x * delta_time) as i128;
-        //
-        //     let x = self.pos.x * self.size.x as i128;
-        //
-        //     if !(50..=600).contains(&x) {
-        //         self.velocity.x = -self.velocity.x;
-        //     }
+        // self.pos.x += self.velocity.x * delta_time;
+        // println!("updating pos of {}:{}", self.name, delta_time);
+        // println!("updating pos to {}", self.pos.x);
     }
 }

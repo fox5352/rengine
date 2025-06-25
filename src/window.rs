@@ -26,6 +26,49 @@ where
     }
 }
 
+// render helper functions
+/// Computes a list of integer coordinate points that approximate the line between two points.
+///
+/// This function uses a form of linear interpolation to generate evenly spaced
+/// integer points between two `f32` coordinates by calculating the number of steps
+/// based on the greater delta between x or y. The coordinates are rounded to the
+/// nearest integers at each step.
+///
+/// # Arguments
+///
+/// * `p1` - A tuple representing the starting point (x, y) as `f32`.
+/// * `p2` - A tuple representing the ending point (x, y) as `f32`.
+///
+/// # Returns
+///
+/// A `Vec<(i32, i32)>` containing the interpolated points from `p1` to `p2`, excluding `p2`.
+///
+/// # Example
+///
+/// ```
+/// let points = compute_points_between((0.0, 0.0), (3.0, 3.0));
+/// assert_eq!(points, vec![(0, 0), (1, 1), (2, 2)]);
+/// ```
+// TODO: switch to Bresenham’s Line Generation later to fill holes
+pub fn compute_points_between(p1: (f32, f32), p2: (f32, f32)) -> Vec<(i32, i32)> {
+    let mut slope: Vec<(i32, i32)> = vec![];
+    let dx = p2.0 - p1.0;
+    let dy = p2.1 - p1.1;
+
+    let steps = dx.abs().max(dy.abs()) as i32;
+    let x_step = dx / steps as f32;
+    let y_step = dy / steps as f32;
+
+    for index in 0..steps {
+        let x = (p1.0 + (x_step * index as f32)).round() as i32;
+        let y = (p1.1 + (y_step * index as f32)).round() as i32;
+
+        slope.push((x, y));
+    }
+
+    slope
+}
+
 pub struct Renderer {
     canvas: sdl2::render::Canvas<sdl2::video::Window>,
 }
@@ -57,6 +100,17 @@ impl Renderer {
     pub fn clear(&mut self) {
         self.canvas.set_draw_color(Color::RGBA(0, 0, 0, 0));
         self.canvas.clear();
+    }
+
+    fn fill_triangle(&mut self, pivot: Point, points: &[Point; 2]) {
+        let points = compute_points_between(
+            (points[0].x as f32, points[0].y as f32),
+            (points[1].x as f32, points[1].y as f32),
+        );
+
+        points.iter().for_each(|(x, y)| {
+            self.canvas.draw_line(pivot, Point::new(*x, *y)).unwrap();
+        });
     }
 
     pub fn render(&mut self) {
@@ -101,6 +155,11 @@ impl Renderer {
                     self.canvas.set_draw_color(Color::RGBA(204, 85, 0, 255));
 
                     self.canvas.draw_lines(&cords[..]).unwrap();
+
+                    let pivot = cords[..][0];
+                    let points = [cords[1..][0], cords[1..][1]];
+
+                    self.fill_triangle(pivot, &points);
                 }
             }
         }
@@ -192,5 +251,53 @@ pub fn start_window(scene: World) {
         if elapsed < FRAME_TIME {
             std::thread::sleep(FRAME_TIME - elapsed);
         }
+    }
+}
+
+// testing
+#[cfg(test)]
+mod test_helper_functions {
+    use super::compute_points_between;
+
+    #[test]
+    fn test_horizontal_line() {
+        let result = compute_points_between((0.0, 0.0), (4.0, 0.0));
+        assert_eq!(result, vec![(0, 0), (1, 0), (2, 0), (3, 0)]);
+    }
+
+    #[test]
+    fn test_vertical_line() {
+        let result = compute_points_between((0.0, 0.0), (0.0, 4.0));
+        assert_eq!(result, vec![(0, 0), (0, 1), (0, 2), (0, 3)]);
+    }
+
+    #[test]
+    fn test_diagonal_line() {
+        let result = compute_points_between((1.0, 1.0), (4.0, 4.0));
+        assert_eq!(result, vec![(1, 1), (2, 2), (3, 3)]);
+    }
+
+    #[test]
+    fn test_reverse_direction() {
+        let result = compute_points_between((3.0, 3.0), (0.0, 0.0));
+        assert_eq!(result, vec![(3, 3), (2, 2), (1, 1)]);
+    }
+
+    #[test]
+    fn test_steep_slope() {
+        let result = compute_points_between((0.0, 0.0), (1.0, 4.0));
+        assert_eq!(result, vec![(0, 0), (0, 1), (0, 2), (0, 3)]);
+    }
+
+    #[test]
+    fn test_flat_slope() {
+        let result = compute_points_between((2.0, 2.0), (6.0, 2.0));
+        assert_eq!(result, vec![(2, 2), (3, 2), (4, 2), (5, 2)]);
+    }
+
+    #[test]
+    fn test_same_point() {
+        let result = compute_points_between((1.0, 1.0), (1.0, 1.0));
+        assert_eq!(result, vec![]);
     }
 }

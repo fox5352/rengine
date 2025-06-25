@@ -168,8 +168,8 @@ pub mod collision_cal {
                 let ry = sx * sin_theta + sy * cos_theta;
 
                 // Move to world position
-                let world_x = point.x as f32 + rx;
-                let world_y = point.y as f32 + ry;
+                let world_x = point.x + rx;
+                let world_y = point.y + ry;
 
                 (world_x, world_y)
             })
@@ -201,10 +201,10 @@ pub mod collision_cal {
         let obj2_pos = obj2.0;
         let obj2_size = obj2.1;
 
-        let obj1_x = obj1_pos.x as f32;
-        let obj1_y = obj1_pos.y as f32;
-        let obj2_x = obj2_pos.x as f32;
-        let obj2_y = obj2_pos.y as f32;
+        let obj1_x = obj1_pos.x;
+        let obj1_y = obj1_pos.y;
+        let obj2_x = obj2_pos.x;
+        let obj2_y = obj2_pos.y;
 
         obj1_x < obj2_x + obj2_size.x
             && obj1_x + obj1_size.x > obj2_x
@@ -226,8 +226,8 @@ mod test_collision_cal {
     fn test_aabb_collision() {
         let obj1 = (
             PointWithDeg {
-                x: 0,
-                y: 0,
+                x: 0.0,
+                y: 0.0,
                 deg: 0.0,
             },
             Size { x: 10.0, y: 10.0 },
@@ -236,8 +236,8 @@ mod test_collision_cal {
 
         let obj2 = (
             PointWithDeg {
-                x: 5,
-                y: 5,
+                x: 5.0,
+                y: 5.0,
                 deg: 0.0,
             },
             Size { x: 10.0, y: 10.0 },
@@ -251,8 +251,8 @@ mod test_collision_cal {
     fn test_aabb_no_collision() {
         let obj1 = (
             PointWithDeg {
-                x: 0,
-                y: 0,
+                x: 0.0,
+                y: 0.0,
                 deg: 0.0,
             },
             Size { x: 10.0, y: 10.0 },
@@ -261,8 +261,8 @@ mod test_collision_cal {
 
         let obj2 = (
             PointWithDeg {
-                x: 20,
-                y: 20,
+                x: 20.0,
+                y: 20.0,
                 deg: 0.0,
             },
             Size { x: 10.0, y: 10.0 },

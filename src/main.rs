@@ -7,8 +7,6 @@ use rengine::{
 };
 
 fn main() {
-    let pos = PointWithDeg::new(250.0, 250.0, None);
-    let size = Size::new(50.0, 50.0);
 
     let floor = Box::new(StaticObject::new(
         0,
@@ -19,12 +17,14 @@ fn main() {
         CustomShape::gen_rectangle(),
     ));
 
+    let pos = PointWithDeg::new(250.0, 250.0, None);
+    let size = Size::new(50.0, 50.0);
     let moving_platform = Box::new(AnimatedObject::new(
         0,
-        String::from("Platform"),
+        String::from("Moving Shape"),
         pos,
         size,
-        Velocity { y: 0.0, x: 25.0 },
+        Velocity { y: 0.0, x: 250.0 },
         Some(vec![1]),
         CustomShape::gen_triangle(),
     ));
