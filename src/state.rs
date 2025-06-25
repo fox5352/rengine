@@ -44,6 +44,8 @@ pub mod engine_state {
 
     impl Default for GlobalState {
         /// Constructs a default `GlobalState` with empty registries and maps.
+        ///
+        /// Returns an instance of `GlobalState` with empty registries and maps.
         fn default() -> Self {
             Self {
                 masks: [(); 15].map(|_| Vec::new()),
@@ -59,6 +61,8 @@ pub mod engine_state {
 
     impl GlobalState {
         /// Constructs a new `GlobalState` instance.
+        ///
+        /// Returns a new instance of `GlobalState`.
         pub fn new() -> Self {
             Self::default()
         }
@@ -86,8 +90,20 @@ pub mod engine_state {
         }
 
         /// Removes an object ID from a specific mask row.
-        pub fn remove_mask(&mut self, row: usize, id: String) {
-            self.masks[row].retain(|x| x != &id);
+        ///
+        /// # Arguments
+        /// * `mask` - 1-based index (1-15) of the mask.
+        /// * `item` - Object ID to remove.
+        ///
+        /// # Errors
+        /// Returns an error if index is out of range.
+        pub fn remove_mask(&mut self, row: usize, id: String) -> Result<(), String> {
+            let index = row.checked_sub(1).ok_or("mask must be >= 1")?;
+            if index >= 15 {
+                return Err("mask out of range, must be between 1 and 15".to_string());
+            }
+            self.masks[index].retain(|x| x != &id);
+            Ok(())
         }
 
         // ====================
@@ -95,23 +111,71 @@ pub mod engine_state {
         // ====================
 
         /// Adds a static object ID to a z-index layer.
-        pub fn append_static_z_index(&mut self, row: usize, id: String) {
-            self.s_z_index[row].push(id);
+        ///
+        /// # Arguments
+        /// * `row` - 1-based index (1-255) of the z-index layer.
+        /// * `id` - Object ID to insert.
+        ///
+        /// # Errors
+        /// Returns an error if index is out of range.
+        pub fn append_static_z_index(&mut self, row: usize, id: String) -> Result<(), String> {
+            let index = row.checked_sub(1).ok_or("mask must be >= 1")?;
+            if index >= 255 {
+                return Err("z-index out of range, must be between 1 and 255".to_string());
+            }
+            self.s_z_index[index].push(id);
+            Ok(())
         }
 
         /// Adds an animated object ID to a z-index layer.
-        pub fn append_animated_z_index(&mut self, row: usize, id: String) {
-            self.a_z_index[row].push(id);
+        ///
+        /// # Arguments
+        /// * `row` - 1-based index (1-255) of the z-index layer.
+        /// * `id` - Object ID to insert.
+        ///
+        /// # Errors
+        /// Returns an error if index is out of range.
+        pub fn append_animated_z_index(&mut self, row: usize, id: String) -> Result<(), String> {
+            let index = row.checked_sub(1).ok_or("mask must be >= 1")?;
+            if index >= 255 {
+                return Err("z-index out of range, must be between 1 and 255".to_string());
+            }
+            self.a_z_index[index].push(id);
+            Ok(())
         }
 
         /// Removes a static object ID from a z-index layer.
-        pub fn remove_static_z_index(&mut self, row: usize, id: String) {
-            self.s_z_index[row].retain(|x| x != &id);
+        ///
+        /// # Arguments
+        /// * `row` - 1-based index (1-255) of the z-index layer.
+        /// * `id` - Object ID to remove.
+        ///
+        /// # Errors
+        /// Returns an error if index is out of range.
+        pub fn remove_static_z_index(&mut self, row: usize, id: String) -> Result<(), String> {
+            let index = row.checked_sub(1).ok_or("mask must be >= 1")?;
+            if index >= 255 {
+                return Err("z-index out of range, must be between 1 and 255".to_string());
+            }
+            self.s_z_index[index].retain(|x| x != &id);
+            Ok(())
         }
 
         /// Removes an animated object ID from a z-index layer.
-        pub fn remove_animated_z_index(&mut self, row: usize, id: String) {
-            self.a_z_index[row].retain(|x| x != &id);
+        ///
+        /// # Arguments
+        /// * `row` - 1-based index (1-255) of the z-index layer.
+        /// * `id` - Object ID to remove.
+        ///
+        /// # Errors
+        /// Returns an error if index is out of range.
+        pub fn remove_animated_z_index(&mut self, row: usize, id: String) -> Result<(), String> {
+            let index = row.checked_sub(1).ok_or("mask must be >= 1")?;
+            if index >= 255 {
+                return Err("z-index out of range, must be between 1 and 255".to_string());
+            }
+            self.a_z_index[index].retain(|x| x != &id);
+            Ok(())
         }
 
         // ====================
@@ -119,21 +183,33 @@ pub mod engine_state {
         // ====================
 
         /// Registers a static object's ID.
+        ///
+        /// # Arguments
+        /// * `id` - Object ID to insert.
         pub fn append_static_identifiable(&mut self, id: String) {
             self.s_identifiables.push(id);
         }
 
         /// Registers an animated object's ID.
+        ///
+        /// # Arguments
+        /// * `id` - Object ID to insert.
         pub fn append_animated_identifiable(&mut self, id: String) {
             self.a_identifiables.push(id);
         }
 
         /// Unregisters a static object's ID.
+        ///
+        /// # Arguments
+        /// * `id` - Object ID to remove.
         pub fn remove_static_identifiable(&mut self, id: String) {
             self.s_identifiables.retain(|x| x != &id);
         }
 
         /// Unregisters an animated object's ID.
+        ///
+        /// # Arguments
+        /// * `id` - Object ID to remove.
         pub fn remove_animated_identifiable(&mut self, id: String) {
             self.a_identifiables.retain(|x| x != &id);
         }
@@ -143,6 +219,10 @@ pub mod engine_state {
         // ====================
 
         /// Inserts a static object into the static map if the key doesn't exist.
+        ///
+        /// # Arguments
+        /// * `key` - Object ID to insert.
+        /// * `value` - Static object to insert.
         pub fn insert_s_map(&mut self, key: String, value: Arc<Mutex<Box<dyn StaticObjectTrait>>>) {
             if self.s_map.contains_key(&key) {
                 return;
@@ -151,6 +231,10 @@ pub mod engine_state {
         }
 
         /// Inserts an animated object into the animated map if the key doesn't exist.
+        ///
+        /// # Arguments
+        /// * `key` - Object ID to insert.
+        /// * `value` - Animated object to insert.
         pub fn insert_a_map(
             &mut self,
             key: String,
@@ -163,11 +247,17 @@ pub mod engine_state {
         }
 
         /// Removes a static object by key.
+        ///
+        /// # Arguments
+        /// * `key` - Object ID to remove.
         pub fn remove_s_map(&mut self, key: String) {
             self.s_map.remove(&key);
         }
 
         /// Removes an animated object by key.
+        ///
+        /// # Arguments
+        /// * `key` - Object ID to remove.
         pub fn remove_a_map(&mut self, key: String) {
             self.a_map.remove(&key);
         }
@@ -177,21 +267,69 @@ pub mod engine_state {
         // ====================
 
         /// Gets the list of object IDs in the specified mask row.
-        pub fn get_mask_row(&self, row: usize) -> &Vec<String> {
-            &self.masks[row]
+        ///
+        /// # Arguments
+        /// * `row` - 1-based index (1-15) of the mask.
+        ///
+        /// # Success
+        /// Returns the list of object IDs in the specified mask row.
+        ///
+        /// # Errors
+        /// Returns an error if index is out of range.
+        pub fn get_mask_row(&self, row: usize) -> Result<&Vec<String>, String> {
+            let index = row.checked_sub(1).ok_or("mask must be >= 1")?;
+            if index >= 15 {
+                return Err("mask out of range, must be between 1 and 15".to_string());
+            }
+            Ok(&self.masks[row])
         }
 
         /// Gets the list of static object IDs in a z-index layer.
-        pub fn get_static_z_index_row(&self, row: usize) -> &Vec<String> {
-            &self.s_z_index[row]
+        ///
+        /// # Arguments
+        /// * `row` - 1-based index (1-255) of the z-index layer.
+        ///
+        /// # Success
+        /// Returns the list of static object IDs in the specified z-index layer.
+        ///
+        /// # Errors
+        /// Returns an error if index is out of range.
+        pub fn get_static_z_index_row(&self, row: usize) -> Result<&Vec<String>, String> {
+            let index = row.checked_sub(1).ok_or("mask must be >= 1")?;
+            if index >= 255 {
+                return Err("z-index out of range, must be between 1 and 255".to_string());
+            }
+            Ok(&self.s_z_index[row])
         }
 
         /// Gets the list of animated object IDs in a z-index layer.
-        pub fn get_animated_z_index_row(&self, row: usize) -> &Vec<String> {
-            &self.a_z_index[row]
+        ///
+        /// # Arguments
+        /// * `row` - 1-based index (1-255) of the z-index layer.
+        ///
+        /// # Success
+        /// Returns the list of animated object IDs in the specified z-index layer.
+        ///
+        /// # Errors
+        /// Returns an error if index is out of range.
+        pub fn get_animated_z_index_row(&self, row: usize) -> Result<&Vec<String>, String> {
+            let index = row.checked_sub(1).ok_or("mask must be >= 1")?;
+            if index >= 255 {
+                return Err("z-index out of range, must be between 1 and 255".to_string());
+            }
+            Ok(&self.a_z_index[row])
         }
 
         /// Retrieves a static object by key.
+        ///
+        /// # Arguments
+        /// * `key` - Object ID to retrieve.
+        ///
+        /// # Success
+        /// Returns the static object with the specified key.
+        ///
+        /// # Errors
+        /// Returns an error if the object is not found.
         pub fn get_static_map_value(
             &self,
             key: &str,
@@ -200,6 +338,15 @@ pub mod engine_state {
         }
 
         /// Retrieves an animated object by key.
+        ///
+        /// # Arguments
+        /// * `key` - Object ID to retrieve.
+        ///
+        /// # Success
+        /// Returns the animated object with the specified key.
+        ///
+        /// # Errors
+        /// Returns an error if the object is not found.
         pub fn get_animated_map_value(
             &self,
             key: &str,
@@ -213,7 +360,16 @@ pub mod engine_state {
         Lazy::new(|| Arc::new(RwLock::new(GlobalState::new())));
 
     /// Adds a static object to the global state, updating masks, z-index, identifiers, and map.
-    pub fn add_static_object(object: Arc<Mutex<Box<dyn StaticObjectTrait>>>) {
+    ///
+    /// # Arguments
+    /// * `object` - Static object to add.
+    ///
+    /// # Success
+    /// Returns `Ok(())` if the object is successfully added to the global state.
+    ///
+    /// # Errors
+    /// Returns an error if the object fails to be added to the global state.
+    pub fn add_static_object(object: Arc<Mutex<Box<dyn StaticObjectTrait>>>) -> Result<(), String> {
         let mut global_state = GLOBAL_STATE.write().unwrap();
         let obj = object.lock().unwrap();
         let id = obj.get_id().to_string();
@@ -224,13 +380,26 @@ pub mod engine_state {
             global_state.append_mask(obj_mask_row, id.clone()).unwrap();
         }
 
-        global_state.append_static_z_index(obj_z_index, id.clone());
+        global_state.append_static_z_index(obj_z_index, id.clone())?;
         global_state.append_static_identifiable(id.clone());
         global_state.insert_s_map(id.clone(), Arc::clone(&object));
+
+        Ok(())
     }
 
     /// Adds an animated object to the global state, updating masks, z-index, identifiers, and map.
-    pub fn add_animated_object(object: Arc<Mutex<Box<dyn PhysicsObjectTrait>>>) {
+    ///
+    /// # Arguments
+    /// * `object` - Animated object to add.
+    ///
+    /// # Success
+    /// Returns `Ok(())` if the object is successfully added to the global state.
+    ///
+    /// # Errors
+    /// Returns an error if the object fails to be added to the global state.
+    pub fn add_animated_object(
+        object: Arc<Mutex<Box<dyn PhysicsObjectTrait>>>,
+    ) -> Result<(), String> {
         let mut global_state = GLOBAL_STATE.write().unwrap();
         let obj = object.lock().unwrap();
         let id = obj.get_id().to_string();
@@ -241,29 +410,55 @@ pub mod engine_state {
             global_state.append_mask(obj_mask_row, id.clone()).unwrap();
         }
 
-        global_state.append_animated_z_index(obj_z_index, id.clone());
+        global_state.append_animated_z_index(obj_z_index, id.clone())?;
         global_state.append_animated_identifiable(id.clone());
         global_state.insert_a_map(id.clone(), Arc::clone(&object));
+
+        Ok(())
     }
 
     /// Removes a static object from all registries and maps using a given row and ID.
-    pub fn remove_static_object(row: usize, id: String) {
+    ///
+    /// # Arguments
+    /// * `row` - 1-based index (1-255) of the z-index layer.
+    /// * `id` - Object ID to remove.
+    ///
+    /// # Success
+    /// Returns `Ok(())` if the object is successfully removed from the global state.
+    ///
+    /// # Errors
+    /// Returns an error if the object fails to be removed from the global state.
+    pub fn remove_static_object(row: usize, id: String) -> Result<(), String> {
         let mut global_state = GLOBAL_STATE.write().unwrap();
 
-        global_state.remove_mask(row, id.clone());
-        global_state.remove_static_z_index(row, id.clone());
+        global_state.remove_mask(row, id.clone())?;
+        global_state.remove_static_z_index(row, id.clone())?;
         global_state.remove_static_identifiable(id.clone());
         global_state.remove_s_map(id.clone());
+
+        Ok(())
     }
 
     /// Removes an animated object from all registries and maps using a given row and ID.
-    pub fn remove_animated_object(row: usize, id: String) {
+    ///
+    /// # Arguments
+    /// * `row` - 1-based index (1-255) of the z-index layer.
+    /// * `id` - Object ID to remove.
+    ///
+    /// # Success
+    /// Returns `Ok(())` if the object is successfully removed from the global state.
+    ///
+    /// # Errors
+    /// Returns an error if the object fails to be removed from the global state.
+    pub fn remove_animated_object(row: usize, id: String) -> Result<(), String> {
         let mut global_state = GLOBAL_STATE.write().unwrap();
 
-        global_state.remove_mask(row, id.clone());
-        global_state.remove_animated_z_index(row, id.clone());
+        global_state.remove_mask(row, id.clone())?;
+        global_state.remove_animated_z_index(row, id.clone())?;
         global_state.remove_animated_identifiable(id.clone());
         global_state.remove_a_map(id.clone());
+
+        Ok(())
     }
 }
 
