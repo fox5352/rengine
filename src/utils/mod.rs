@@ -190,7 +190,6 @@ pub mod collision_cal {
     ///
     /// * `true` if the objects overlap.
     /// * `false` otherwise.
-    #[allow(unused_variables)]
     pub fn check_collision(
         obj1: (PointWithDeg, Size, CustomShape),
         obj2: (PointWithDeg, Size, CustomShape),

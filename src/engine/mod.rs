@@ -37,6 +37,10 @@ pub mod traits {
         fn get_pos(&self) -> PointWithDeg;
     }
 
+    pub trait CollisionTrait {
+        fn check_collision(&self, new: PointWithDeg) -> bool;
+    }
+
     /// The `engine` module defines game objects and their traits.
     pub trait Object {
         fn set_size(self, size: Size);
@@ -91,6 +95,7 @@ pub mod traits {
         + SizeTrait
         + PointTrait
         + ShapeTrait
+        + CollisionTrait
     {
     }
     impl<
@@ -105,7 +110,8 @@ pub mod traits {
             + VelocityTrait
             + SizeTrait
             + PointTrait
-            + ShapeTrait,
+            + ShapeTrait
+            + CollisionTrait,
     > PhysicsObjectTrait for T
     {
     }
@@ -115,13 +121,14 @@ pub mod structures {
     use uuid::Uuid;
 
     use crate::{
+        types::state_machines::{GLOBAL_STATE, GlobalStateResult},
         units::{PointWithDeg, Size, Velocity},
-        utils::{shapes::CustomShape, util_items::gen_id},
+        utils::{collision_cal::check_collision, shapes::CustomShape, util_items::gen_id},
     };
 
     use super::traits::{
-        IdentifiableTrait, MasksTrait, NamedTrait, PointTrait, ShapeTrait, SizeTrait,
-        VelocityTrait, ZIndexTrait,
+        CollisionTrait, IdentifiableTrait, MasksTrait, NamedTrait, PointTrait, ShapeTrait,
+        SizeTrait, VelocityTrait, ZIndexTrait,
     };
 
     /// A static object with position and size
@@ -282,6 +289,47 @@ pub mod structures {
     impl ShapeTrait for AnimatedObject {
         fn get_shape(&self) -> CustomShape {
             self.shape.clone()
+        }
+    }
+
+    impl CollisionTrait for AnimatedObject {
+        fn check_collision(&self, new_point: PointWithDeg) -> bool {
+            let global_state = match GLOBAL_STATE.write() {
+                Err(_) => panic!(
+                    "Failed to lock global state on collion chekc {}:{}",
+                    self.id, self.name
+                ),
+                Ok(global_state) => global_state,
+            };
+
+            let _virtual_obj = (new_point, self.size, self.get_shape());
+
+            for self_masks_row_index in self.masks.iter() {
+                let row = &global_state.get_masks()[*self_masks_row_index];
+
+                // loop over row of related masks
+                // for global_masks_id in masks[*self_masks_id].iter() {
+                //     match global_state.get_obj_by_mask_id(global_masks_id) {
+                //         GlobalStateResult::StaticOjbect(obj) => {
+                //             let obj = obj.lock().unwrap();
+                //             return check_collision(
+                //                 virtual_obj,
+                //                 (obj.get_pos(), obj.get_size(), obj.get_shape()),
+                //             );
+                //         }
+                //         GlobalStateResult::Animatedbject(obj) => {
+                //             let obj = obj.lock().unwrap();
+                //             return check_collision(
+                //                 virtual_obj,
+                //                 (obj.get_pos(), obj.get_size(), obj.get_shape()),
+                //             );
+                //         }
+                //         GlobalStateResult::None => (),
+                //     }
+                // }
+            }
+
+            false
         }
     }
 }

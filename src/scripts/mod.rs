@@ -1,7 +1,7 @@
 use crate::{
     engine::{
         structures::{AnimatedObject, StaticObject},
-        traits::{Object, PhysicsObject},
+        traits::{CollisionTrait, Object, PhysicsObject},
     },
     units::{PointWithDeg, Size},
 };
@@ -28,8 +28,18 @@ impl PhysicsObject for AnimatedObject {
     fn update(&mut self, _delta_time: f32) {}
 
     fn process(&mut self, delta_time: f32) {
-        // self.pos.x += self.velocity.x * delta_time;
-        // println!("updating pos of {}:{}", self.name, delta_time);
-        // println!("updating pos to {}", self.pos.x);
+        let new_pos = PointWithDeg {
+            x: self.pos.x + self.velocity.x * delta_time,
+            y: self.pos.y + self.velocity.y * delta_time,
+            deg: self.pos.deg,
+        };
+
+        let col = self.check_collision(new_pos);
+
+        // if ! {
+        //     self.pos = new_pos;
+        // } else {
+        //     println!("Collision detected BANG!!!");
+        // }
     }
 }

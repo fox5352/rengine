@@ -222,24 +222,25 @@ pub fn start_window(scene: World) {
         }
 
         // Update game state (e.g., physics, AI, etc.)
-        #[cfg(debug_assertions)]
-        {
-            println!("Updating game state");
-        }
+        // TODO: #[cfg(debug_assertions)]
+        // {
+        //     println!("Updating game state");
+        // }
+
         game_state.update();
 
         // Clear the screen to black
-        #[cfg(debug_assertions)]
-        {
-            println!("Clearing screen");
-        }
+        // TODO: #[cfg(debug_assertions)]
+        // {
+        //     println!("Clearing screen");
+        // }
         renderer.clear();
 
         // // ----- DRAWING START -----
-        #[cfg(debug_assertions)]
-        {
-            println!("Drawing");
-        }
+        //  TODO: #[cfg(debug_assertions)]
+        // {
+        //     println!("Drawing");
+        // }
         renderer.render();
         // You can draw more shapes here!
         // ----- DRAWING END -----

@@ -7,7 +7,6 @@ use rengine::{
 };
 
 fn main() {
-
     let floor = Box::new(StaticObject::new(
         0,
         String::from("Floor"),
@@ -24,13 +23,22 @@ fn main() {
         String::from("Moving Shape"),
         pos,
         size,
-        Velocity { y: 0.0, x: 250.0 },
+        Velocity { y: 0.0, x: 80.0 },
         Some(vec![1]),
         CustomShape::gen_triangle(),
     ));
 
+    let right_wall = Box::new(StaticObject::new(
+        0,
+        String::from("Right Wall"),
+        PointWithDeg::new(500.0, 250.0, None),
+        Size::new(10.0, 80.0),
+        Some(vec![1]),
+        CustomShape::gen_rectangle(),
+    ));
+
     let mut _world = World::new();
-    _world.add_static(vec![floor]);
+    _world.add_static(vec![floor, right_wall]);
     _world.add_animated(vec![moving_platform]);
 
     start_window(_world);

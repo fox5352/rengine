@@ -242,6 +242,12 @@ pub mod state_machines {
         Error(String),
     }
 
+    pub enum GlobalStateResult {
+        StaticOjbect(Arc<Mutex<Box<dyn StaticObjectTrait>>>),
+        Animatedbject(Arc<Mutex<Box<dyn PhysicsObjectTrait>>>),
+        None,
+    }
+
     /// Central state machine holding globally accessible resources and metadata.
     pub struct GlobalStateMachine {
         /// Current internal state (e.g., Idle, Processing, or Error).
@@ -351,6 +357,15 @@ pub mod state_machines {
         /// Returns a reference to the internal mask list.
         pub fn get_masks(&self) -> &[Vec<String>; 15] {
             &self.masks
+        }
+
+        pub fn get_obj_by_mask_id(&self, mask_id: &str) -> GlobalStateResult {
+            if let Some(obj) = self.s_map.get(mask_id) {
+                return GlobalStateResult::StaticOjbect(obj.clone());
+            } else if let Some(obj) = self.a_map.get(mask_id) {
+                return GlobalStateResult::Animatedbject(obj.clone());
+            }
+            GlobalStateResult::None
         }
     }
 
