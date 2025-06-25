@@ -156,10 +156,11 @@ impl Renderer {
 
                     self.canvas.draw_lines(&cords[..]).unwrap();
 
-                    let pivot = cords[..][0];
-                    let points = [cords[1..][0], cords[1..][1]];
+                    let p1 = cords[..][0];
+                    let [p2, p3] = [cords[1..][0], cords[1..][1]];
 
-                    self.fill_triangle(pivot, &points);
+                    self.fill_triangle(p1, &[p2, p3]);
+                    self.fill_triangle(p2, &[p1, p3]);
                 }
             }
         }
