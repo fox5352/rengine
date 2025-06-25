@@ -145,6 +145,17 @@ pub mod structures {
 
     impl StaticObject {
         /// Create a new StaticObject
+        ///
+        /// # Arguments
+        /// * `z_index` - The z-index of the object.
+        /// * `name` - The name of the object.
+        /// * `pos` - The position of the object.
+        /// * `size` - The size of the object.
+        /// * `masks` - The masks of the object.
+        /// * `shape` - The shape of the object.
+        ///
+        /// # Returns
+        /// A new StaticObject.
         pub fn new(
             z_index: u8,
             name: String,
@@ -222,6 +233,19 @@ pub mod structures {
     }
 
     impl AnimatedObject {
+        /// Create a new AnimatedObject
+        ///
+        /// # Arguments
+        /// * `z_index` - The z-index of the object.
+        /// * `name` - The name of the object.
+        /// * `pos` - The position of the object.
+        /// * `size` - The size of the object.
+        /// * `velocity` - The velocity of the object.
+        /// * `masks` - The masks of the object.
+        /// * `shape` - The shape of the object.
+        ///
+        /// # Returns
+        /// A new AnimatedObject.
         pub fn new(
             z_index: u8,
             name: String,
