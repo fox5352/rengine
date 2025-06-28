@@ -80,12 +80,11 @@ pub mod engine_state {
         /// # Errors
         /// Returns an error if index is out of range.
         pub fn append_mask(&mut self, mask: usize, item: String) -> Result<(), String> {
-            let index = mask.checked_sub(1).ok_or("mask must be >= 1")?;
-            if index >= 15 {
+            if !(1..=15).contains(&mask) {
                 return Err("mask out of range, must be between 1 and 15".to_string());
             }
 
-            self.masks[index].push(item);
+            self.masks[mask - 1].push(item);
             Ok(())
         }
 
@@ -98,11 +97,10 @@ pub mod engine_state {
         /// # Errors
         /// Returns an error if index is out of range.
         pub fn remove_mask(&mut self, row: usize, id: String) -> Result<(), String> {
-            let index = row.checked_sub(1).ok_or("mask must be >= 1")?;
-            if index >= 15 {
+            if !(1..=15).contains(&row) {
                 return Err("mask out of range, must be between 1 and 15".to_string());
             }
-            self.masks[index].retain(|x| x != &id);
+            self.masks[row - 1].retain(|x| x != &id);
             Ok(())
         }
 
@@ -119,11 +117,10 @@ pub mod engine_state {
         /// # Errors
         /// Returns an error if index is out of range.
         pub fn append_static_z_index(&mut self, row: usize, id: String) -> Result<(), String> {
-            let index = row.checked_sub(1).ok_or("mask must be >= 1")?;
-            if index >= 255 {
+            if !(1..=255).contains(&row) {
                 return Err("z-index out of range, must be between 1 and 255".to_string());
             }
-            self.s_z_index[index].push(id);
+            self.s_z_index[row - 1].push(id);
             Ok(())
         }
 
@@ -136,11 +133,10 @@ pub mod engine_state {
         /// # Errors
         /// Returns an error if index is out of range.
         pub fn append_animated_z_index(&mut self, row: usize, id: String) -> Result<(), String> {
-            let index = row.checked_sub(1).ok_or("mask must be >= 1")?;
-            if index >= 255 {
+            if !(1..=255).contains(&row) {
                 return Err("z-index out of range, must be between 1 and 255".to_string());
             }
-            self.a_z_index[index].push(id);
+            self.a_z_index[row - 1].push(id);
             Ok(())
         }
 
@@ -153,11 +149,10 @@ pub mod engine_state {
         /// # Errors
         /// Returns an error if index is out of range.
         pub fn remove_static_z_index(&mut self, row: usize, id: String) -> Result<(), String> {
-            let index = row.checked_sub(1).ok_or("mask must be >= 1")?;
-            if index >= 255 {
+            if !(1..=255).contains(&row) {
                 return Err("z-index out of range, must be between 1 and 255".to_string());
             }
-            self.s_z_index[index].retain(|x| x != &id);
+            self.s_z_index[row - 1].retain(|x| x != &id);
             Ok(())
         }
 
@@ -170,11 +165,10 @@ pub mod engine_state {
         /// # Errors
         /// Returns an error if index is out of range.
         pub fn remove_animated_z_index(&mut self, row: usize, id: String) -> Result<(), String> {
-            let index = row.checked_sub(1).ok_or("mask must be >= 1")?;
-            if index >= 255 {
+            if !(1..=255).contains(&row) {
                 return Err("z-index out of range, must be between 1 and 255".to_string());
             }
-            self.a_z_index[index].retain(|x| x != &id);
+            self.a_z_index[row - 1].retain(|x| x != &id);
             Ok(())
         }
 
@@ -276,12 +270,11 @@ pub mod engine_state {
         ///
         /// # Errors
         /// Returns an error if index is out of range.
-        pub fn get_mask_row(&self, row: usize) -> Result<&Vec<String>, String> {
-            let index = row.checked_sub(1).ok_or("mask must be >= 1")?;
-            if index >= 15 {
+        pub fn get_mask_row(&self, row: usize) -> Result<Vec<String>, String> {
+            if !(1..=15).contains(&row) {
                 return Err("mask out of range, must be between 1 and 15".to_string());
             }
-            Ok(&self.masks[row])
+            Ok(self.masks[row - 1].clone())
         }
 
         /// Gets the list of static object IDs in a z-index layer.
@@ -294,12 +287,11 @@ pub mod engine_state {
         ///
         /// # Errors
         /// Returns an error if index is out of range.
-        pub fn get_static_z_index_row(&self, row: usize) -> Result<&Vec<String>, String> {
-            let index = row.checked_sub(1).ok_or("mask must be >= 1")?;
-            if index >= 255 {
+        pub fn get_static_z_index_row(&self, row: usize) -> Result<Vec<String>, String> {
+            if !(1..=255).contains(&row) {
                 return Err("z-index out of range, must be between 1 and 255".to_string());
             }
-            Ok(&self.s_z_index[row])
+            Ok(self.s_z_index[row - 1].clone())
         }
 
         /// Gets the list of animated object IDs in a z-index layer.
@@ -312,12 +304,25 @@ pub mod engine_state {
         ///
         /// # Errors
         /// Returns an error if index is out of range.
-        pub fn get_animated_z_index_row(&self, row: usize) -> Result<&Vec<String>, String> {
-            let index = row.checked_sub(1).ok_or("mask must be >= 1")?;
-            if index >= 255 {
+        pub fn get_animated_z_index_row(&self, row: usize) -> Result<Vec<String>, String> {
+            if !(1..=255).contains(&row) {
                 return Err("z-index out of range, must be between 1 and 255".to_string());
             }
-            Ok(&self.a_z_index[row])
+            Ok(self.a_z_index[row - 1].clone())
+        }
+
+        /// Retrieves the list of static object IDs.
+        ///
+        /// Returns the list of static object IDs.
+        pub fn get_static_identifiables(&self) -> Vec<String> {
+            self.s_identifiables.clone()
+        }
+
+        /// Retrieves the list of animated object IDs.
+        ///
+        /// Returns the list of animated object IDs.
+        pub fn get_animated_identifiables(&self) -> Vec<String> {
+            self.a_identifiables.clone()
         }
 
         /// Retrieves a static object by key.
@@ -359,104 +364,440 @@ pub mod engine_state {
     pub static GLOBAL_STATE: Lazy<Arc<RwLock<GlobalState>>> =
         Lazy::new(|| Arc::new(RwLock::new(GlobalState::new())));
 
-    /// Adds a static object to the global state, updating masks, z-index, identifiers, and map.
+    // ====================
+    // Public Functions to Manage Global State
+    // =====================
+
+    /// Gets a list of object IDs in the specified mask row.
     ///
     /// # Arguments
-    /// * `object` - Static object to add.
+    /// * `row` - 1-based index (1-15) of the mask.
     ///
     /// # Success
-    /// Returns `Ok(())` if the object is successfully added to the global state.
+    /// Returns the list of object IDs in the specified mask row.
     ///
     /// # Errors
-    /// Returns an error if the object fails to be added to the global state.
-    pub fn add_static_object(object: Arc<Mutex<Box<dyn StaticObjectTrait>>>) -> Result<(), String> {
-        let mut global_state = GLOBAL_STATE.write().unwrap();
-        let obj = object.lock().unwrap();
-        let id = obj.get_id().to_string();
-        let obj_masks = obj.get_masks();
-        let obj_z_index = obj.get_z_index() as usize;
+    /// Returns an error if index is out of range.
+    pub fn get_mask_row(row: usize) -> Result<Vec<String>, String> {
+        let global_state = GLOBAL_STATE
+            .read()
+            .map_err(|_| "Failed to lock on get_mask_row".to_string())?;
 
-        for obj_mask_row in obj_masks {
-            global_state.append_mask(obj_mask_row, id.clone()).unwrap();
-        }
+        let mask_row = global_state.get_mask_row(row)?;
 
-        global_state.append_static_z_index(obj_z_index, id.clone())?;
-        global_state.append_static_identifiable(id.clone());
-        global_state.insert_s_map(id.clone(), Arc::clone(&object));
+        drop(global_state);
+
+        Ok(mask_row)
+    }
+
+    /// Gets a list of static object IDs in a z-index layer.
+    ///
+    /// # Arguments
+    /// * `row` - 1-based index (1-255) of the z-index layer.
+    ///
+    /// # Success
+    /// Returns the list of static object IDs in the specified z-index layer.
+    ///
+    /// # Errors
+    /// Returns an error if index is out of range.
+    pub fn get_static_z_index_row(row: usize) -> Result<Vec<String>, String> {
+        let global_state = GLOBAL_STATE
+            .read()
+            .map_err(|_| "Failed to lock on get_static_z_index_row".to_string())?;
+
+        let mask_row = global_state.get_static_z_index_row(row)?;
+
+        drop(global_state);
+
+        Ok(mask_row)
+    }
+
+    /// Gets a list of animated object IDs in a z-index layer.
+    ///
+    /// # Arguments
+    /// * `row` - 1-based index (1-255) of the z-index layer.
+    ///
+    /// # Success
+    /// Returns the list of animated object IDs in the specified z-index layer.
+    ///
+    /// # Errors
+    /// Returns an error if index is out of range.
+    pub fn get_animated_z_index_row(row: usize) -> Result<Vec<String>, String> {
+        let global_state = GLOBAL_STATE
+            .read()
+            .map_err(|_| "Failed to lock on get_animated_z_index_row".to_string())?;
+
+        let mask_row = global_state.get_animated_z_index_row(row)?;
+
+        drop(global_state);
+
+        Ok(mask_row)
+    }
+
+    /// Retrieves the list of static object IDs.
+    ///
+    /// # Success
+    /// Returns the list of static object IDs.
+    pub fn get_static_identifiable() -> Result<Vec<String>, String> {
+        let global_state = GLOBAL_STATE
+            .read()
+            .map_err(|_| "Failed to lock on get_static_identifiable".to_string())?;
+
+        let mask_row = global_state.get_static_identifiables();
+
+        drop(global_state);
+
+        Ok(mask_row)
+    }
+
+    /// Retrieves the list of animated object IDs.
+    ///
+    /// # Success
+    /// Returns the list of animated object IDs.
+    pub fn get_animated_identifiable() -> Result<Vec<String>, String> {
+        let global_state = GLOBAL_STATE
+            .read()
+            .map_err(|_| "Failed to lock on get_animated_identifiable".to_string())?;
+
+        let mask_row = global_state.get_animated_identifiables();
+
+        drop(global_state);
+
+        Ok(mask_row)
+    }
+
+    // ====================
+    // Public Functions to Add Objects to Global State
+    // =====================
+
+    /// Adds a mask to a specific row in the global state.
+    ///
+    /// # Arguments
+    /// * `row` - 1-based index (1-15) of the mask.
+    /// * `id` - Object ID to insert.
+    ///
+    /// # Success
+    /// Returns `Ok(())` if the mask is successfully added to the global state.
+    ///
+    /// # Errors
+    /// Returns an error if the mask fails to be added to the global state.
+    pub fn append_mask_to_row(row: usize, id: String) -> Result<(), String> {
+        let mut global_state = GLOBAL_STATE
+            .write()
+            .map_err(|_| "Failed to lock on append_mask".to_string())?;
+
+        global_state.append_mask(row, id)?;
+
+        drop(global_state);
 
         Ok(())
     }
 
-    /// Adds an animated object to the global state, updating masks, z-index, identifiers, and map.
+    /// Adds a static object ID to a z-index layer.
     ///
     /// # Arguments
-    /// * `object` - Animated object to add.
+    /// * `row` - 1-based index (1-255) of the z-index layer.
+    /// * `id` - Object ID to insert.
+    ///
+    /// # Success
+    /// Returns `Ok(())` if the object ID is successfully added to the global state.
+    ///
+    /// # Errors
+    /// Returns an error if the object ID fails to be added to the global state.
+    pub fn append_static_id_to_index_row(row: usize, id: String) -> Result<(), String> {
+        let mut global_state = GLOBAL_STATE
+            .write()
+            .map_err(|_| "Failed to lock on append_id_to_index_row".to_string())?;
+
+        global_state.append_static_z_index(row, id)?;
+
+        drop(global_state);
+
+        Ok(())
+    }
+
+    /// Adds an animated object ID to a z-index layer.
+    ///
+    /// # Arguments
+    /// * `row` - 1-based index (1-255) of the z-index layer.
+    /// * `id` - Object ID to insert.
+    ///
+    /// # Success
+    /// Returns `Ok(())` if the object ID is successfully added to the global state.
+    ///
+    /// # Errors
+    /// Returns an error if the object ID fails to be added to the global state.
+    pub fn append_animated_id_to_index_row(row: usize, id: String) -> Result<(), String> {
+        let mut global_state = GLOBAL_STATE
+            .write()
+            .map_err(|_| "Failed to lock on append_id_to_index_row".to_string())?;
+
+        global_state.append_animated_z_index(row, id)?;
+
+        drop(global_state);
+
+        Ok(())
+    }
+
+    /// Adds a static object ID to the global state.
+    ///
+    /// # Arguments
+    /// * `id` - Object ID to insert.
+    ///
+    /// # Success
+    /// Returns `Ok(())` if the object ID is successfully added to the global state.
+    ///
+    /// # Errors
+    /// Returns an error if the object ID fails to be added to the global state.
+    pub fn append_static_identifiable(id: String) -> Result<(), String> {
+        let mut global_state = GLOBAL_STATE
+            .write()
+            .map_err(|_| "Failed to lock on append_static_identifiable".to_string())?;
+
+        global_state.append_static_identifiable(id);
+
+        drop(global_state);
+
+        Ok(())
+    }
+
+    /// Adds an animated object ID to the global state.
+    ///
+    /// # Arguments
+    /// * `id` - Object ID to insert.
+    ///
+    /// # Success
+    /// Returns `Ok(())` if the object ID is successfully added to the global state.
+    ///
+    /// # Errors
+    /// Returns an error if the object ID fails to be added to the global state.
+    pub fn append_animated_identifiable(id: String) -> Result<(), String> {
+        let mut global_state = GLOBAL_STATE
+            .write()
+            .map_err(|_| "Failed to lock on append_animated_identifiable".to_string())?;
+
+        global_state.append_animated_identifiable(id);
+
+        drop(global_state);
+
+        Ok(())
+    }
+
+    /// Adds a static object to the global state.
+    ///
+    /// # Arguments
+    /// * `id` - Object ID to insert.
+    /// * `obj` - Object to insert.
     ///
     /// # Success
     /// Returns `Ok(())` if the object is successfully added to the global state.
     ///
     /// # Errors
     /// Returns an error if the object fails to be added to the global state.
-    pub fn add_animated_object(
-        object: Arc<Mutex<Box<dyn PhysicsObjectTrait>>>,
+    pub fn insert_static_object(
+        id: String,
+        obj: Arc<Mutex<Box<dyn StaticObjectTrait>>>,
     ) -> Result<(), String> {
-        let mut global_state = GLOBAL_STATE.write().unwrap();
-        let obj = object.lock().unwrap();
-        let id = obj.get_id().to_string();
-        let obj_masks = obj.get_masks();
-        let obj_z_index = obj.get_z_index() as usize;
+        let mut global_state = GLOBAL_STATE
+            .write()
+            .map_err(|_| "Failed to lock on insert_static_object".to_string())?;
 
-        for obj_mask_row in obj_masks {
-            global_state.append_mask(obj_mask_row, id.clone()).unwrap();
-        }
+        global_state.insert_s_map(id, obj);
 
-        global_state.append_animated_z_index(obj_z_index, id.clone())?;
-        global_state.append_animated_identifiable(id.clone());
-        global_state.insert_a_map(id.clone(), Arc::clone(&object));
+        drop(global_state);
 
         Ok(())
     }
 
-    /// Removes a static object from all registries and maps using a given row and ID.
+    /// Adds an animated object to the global state.
+    ///
+    /// # Arguments
+    /// * `id` - Object ID to insert.
+    /// * `obj` - Object to insert.
+    ///
+    /// # Success
+    /// Returns `Ok(())` if the object is successfully added to the global state.
+    ///
+    /// # Errors
+    /// Returns an error if the object fails to be added to the global state.
+    pub fn insert_animated_object(
+        id: String,
+        obj: Arc<Mutex<Box<dyn PhysicsObjectTrait>>>,
+    ) -> Result<(), String> {
+        let mut global_state = GLOBAL_STATE
+            .write()
+            .map_err(|_| "Failed to lock on insert_animated_object".to_string())?;
+
+        global_state.insert_a_map(id, obj);
+
+        drop(global_state);
+
+        Ok(())
+    }
+
+    // ====================
+    // Public Functions to Remove Objects from Global State
+    // ====================
+
+    /// Removes an object ID from a mask row.
     ///
     /// # Arguments
     /// * `row` - 1-based index (1-255) of the z-index layer.
     /// * `id` - Object ID to remove.
     ///
     /// # Success
-    /// Returns `Ok(())` if the object is successfully removed from the global state.
+    /// Returns `Ok(())` if the object ID is successfully removed from the global state.
     ///
     /// # Errors
-    /// Returns an error if the object fails to be removed from the global state.
-    pub fn remove_static_object(row: usize, id: String) -> Result<(), String> {
-        let mut global_state = GLOBAL_STATE.write().unwrap();
+    /// Returns an error if the object ID fails to be removed from the global state.
+    pub fn remove_mask_from_row(row: usize, id: String) -> Result<(), String> {
+        let mut global_state = GLOBAL_STATE
+            .write()
+            .map_err(|_| "Failed to lock on remove_mask_from_row".to_string())?;
 
-        global_state.remove_mask(row, id.clone())?;
-        global_state.remove_static_z_index(row, id.clone())?;
-        global_state.remove_static_identifiable(id.clone());
-        global_state.remove_s_map(id.clone());
+        global_state
+            .remove_mask(row, id)
+            .map_err(|_| "Failed to remove masks from row".to_string())?;
+
+        drop(global_state);
 
         Ok(())
     }
 
-    /// Removes an animated object from all registries and maps using a given row and ID.
+    /// Removes an object ID from a static z-index layer.
     ///
     /// # Arguments
     /// * `row` - 1-based index (1-255) of the z-index layer.
     /// * `id` - Object ID to remove.
     ///
     /// # Success
-    /// Returns `Ok(())` if the object is successfully removed from the global state.
+    /// Returns `Ok(())` if the object ID is successfully removed from the global state.
     ///
     /// # Errors
-    /// Returns an error if the object fails to be removed from the global state.
-    pub fn remove_animated_object(row: usize, id: String) -> Result<(), String> {
-        let mut global_state = GLOBAL_STATE.write().unwrap();
+    /// Returns an error if the object ID fails to be removed from the global state.
+    pub fn remove_static_z_index_from_row(row: usize, id: String) -> Result<(), String> {
+        let mut global_state = GLOBAL_STATE
+            .write()
+            .map_err(|_| "Failed to lock on remove_static_z_index_from_row".to_string())?;
 
-        global_state.remove_mask(row, id.clone())?;
-        global_state.remove_animated_z_index(row, id.clone())?;
-        global_state.remove_animated_identifiable(id.clone());
-        global_state.remove_a_map(id.clone());
+        global_state
+            .remove_static_z_index(row, id)
+            .map_err(|_| "Failed to remove masks from row".to_string())?;
+
+        drop(global_state);
+
+        Ok(())
+    }
+
+    /// Removes an object ID from an animated z-index layer.
+    ///
+    /// # Arguments
+    /// * `row` - 1-based index (1-255) of the z-index layer.
+    /// * `id` - Object ID to remove.
+    ///
+    /// # Success
+    /// Returns `Ok(())` if the object ID is successfully removed from the global state.
+    ///
+    /// # Errors
+    /// Returns an error if the object ID fails to be removed from the global state.
+    pub fn remove_animated_z_index_from_row(row: usize, id: String) -> Result<(), String> {
+        let mut global_state = GLOBAL_STATE
+            .write()
+            .map_err(|_| "Failed to lock on remove_animated_z_index_from_row".to_string())?;
+
+        global_state
+            .remove_animated_z_index(row, id)
+            .map_err(|_| "Failed to remove masks from row".to_string())?;
+
+        drop(global_state);
+
+        Ok(())
+    }
+
+    /// Removes an object ID from the global state.
+    ///
+    /// # Arguments
+    /// * `id` - Object ID to remove.
+    ///
+    /// # Success
+    /// Returns `Ok(())` if the object ID is successfully removed from the global state.
+    ///
+    /// # Errors
+    /// Returns an error if the object ID fails to be removed from the global state.
+    pub fn remove_static_identifiable(id: String) -> Result<(), String> {
+        let mut global_state = GLOBAL_STATE
+            .write()
+            .map_err(|_| "Failed to lock on remove_static_identifiable".to_string())?;
+
+        global_state.remove_static_identifiable(id);
+
+        drop(global_state);
+
+        Ok(())
+    }
+
+    /// Removes an object ID from the global state.
+    ///
+    /// # Arguments
+    /// * `id` - Object ID to remove.
+    ///
+    /// # Success
+    /// Returns `Ok(())` if the object ID is successfully removed from the global state.
+    ///
+    /// # Errors
+    /// Returns an error if the object ID fails to be removed from the global state.
+    pub fn remove_animated_identifiable(id: String) -> Result<(), String> {
+        let mut global_state = GLOBAL_STATE
+            .write()
+            .map_err(|_| "Failed to lock on remove_animated_identifiable".to_string())?;
+
+        global_state.remove_animated_identifiable(id);
+
+        drop(global_state);
+
+        Ok(())
+    }
+
+    /// Removes an object ID from the global state.
+    ///
+    /// # Arguments
+    /// * `id` - Object ID to remove.
+    ///
+    /// # Success
+    /// Returns `Ok(())` if the object ID is successfully removed from the global state.
+    ///
+    /// # Errors
+    /// Returns an error if the object ID fails to be removed from the global state.
+    pub fn remove_static_object(id: String) -> Result<(), String> {
+        let mut global_state = GLOBAL_STATE
+            .write()
+            .map_err(|_| "Failed to lock on remove_static_object".to_string())?;
+
+        global_state.remove_s_map(id);
+
+        drop(global_state);
+
+        Ok(())
+    }
+
+    /// Removes an object ID from the global state.
+    ///
+    /// # Arguments
+    /// * `id` - Object ID to remove.
+    ///
+    /// # Success
+    /// Returns `Ok(())` if the object ID is successfully removed from the global state.
+    ///
+    /// # Errors
+    /// Returns an error if the object ID fails to be removed from the global state.
+    pub fn remove_animated_object(id: String) -> Result<(), String> {
+        let mut global_state = GLOBAL_STATE
+            .write()
+            .map_err(|_| "Failed to lock on remove_animated_object".to_string())?;
+
+        global_state.remove_a_map(id);
+
+        drop(global_state);
 
         Ok(())
     }
@@ -464,42 +805,52 @@ pub mod engine_state {
 
 #[cfg(test)]
 mod testing_global_state_machine {
-    // use std::sync::{Arc, Mutex};
-    //
-    // use super::engine_state::add_static_object;
-    // use crate::{
-    //     engine::{structures::StaticObject, traits::StaticObjectTrait},
-    //     units::{PointWithDeg, Size},
-    //     utils::shapes::CustomShape,
-    // };
-    //
-    // fn gen_static_object() -> StaticObject {
-    //     StaticObject::new(
-    //         1,
-    //         String::from("test"),
-    //         PointWithDeg::new(0.0, 0.0, None),
-    //         Size::new(10.0, 5.0),
-    //         Some(vec![1, 6]),
-    //         CustomShape::gen_triangle(),
-    //     )
-    // }
-    //
-    // fn gen_animated_object() -> StaticObject {
-    //     StaticObject::new(
-    //         1,
-    //         String::from("test"),
-    //         PointWithDeg::new(0.0, 0.0, None),
-    //         Size::new(10.0, 5.0),
-    //         Some(vec![1, 6]),
-    //         CustomShape::gen_triangle(),
-    //     )
-    // }
+    use std::sync::{Arc, Mutex};
 
-    // #[test]
-    // fn test_add_and_remove_static_object() {
-    //     let test_obj: Arc<Mutex<Box<dyn StaticObjectTrait>>> =
-    //         Arc::new(Mutex::new(Box::new(gen_static_object())));
-    //
-    //     add_static_object(test_obj);
-    // }
+    use super::engine_state::append_mask_to_row;
+
+    use crate::{
+        engine::{structures::StaticObject, traits::StaticObjectTrait},
+        state::engine_state::GLOBAL_STATE,
+        types::state_machines::get_masks,
+        units::{PointWithDeg, Size},
+        utils::shapes::CustomShape,
+    };
+
+    fn gen_static_object() -> StaticObject {
+        StaticObject::new(
+            1,
+            String::from("test"),
+            PointWithDeg::new(0.0, 0.0, None),
+            Size::new(10.0, 5.0),
+            Some(vec![1]),
+            CustomShape::gen_triangle(),
+        )
+    }
+
+    fn gen_animated_object() -> StaticObject {
+        StaticObject::new(
+            1,
+            String::from("test"),
+            PointWithDeg::new(0.0, 0.0, None),
+            Size::new(10.0, 5.0),
+            Some(vec![1]),
+            CustomShape::gen_triangle(),
+        )
+    }
+    #[test]
+    fn test_all_masks_helper_functions() {
+        let test_obj: Arc<Mutex<Box<dyn StaticObjectTrait>>> =
+            Arc::new(Mutex::new(Box::new(gen_static_object())));
+
+        let obj = test_obj.lock().unwrap();
+
+        let test1 = get_masks().unwrap();
+
+        dbg!(test1);
+
+        for idx in obj.get_masks() {
+            append_mask_to_row(idx, obj.get_id().to_string()).unwrap();
+        }
+    }
 }
