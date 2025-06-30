@@ -343,7 +343,7 @@ pub mod engine_state {
         ///
         /// # Errors
         /// Returns an error if the object is not found.
-        pub fn get_static_map_value(
+        pub fn get_static_object(
             &self,
             key: &str,
         ) -> Option<Arc<Mutex<Box<dyn StaticObjectTrait>>>> {
@@ -360,7 +360,7 @@ pub mod engine_state {
         ///
         /// # Errors
         /// Returns an error if the object is not found.
-        pub fn get_animated_map_value(
+        pub fn get_animated_object(
             &self,
             key: &str,
         ) -> Option<Arc<Mutex<Box<dyn PhysicsObjectTrait>>>> {
@@ -456,6 +456,42 @@ pub mod engine_state {
         drop(global_state);
 
         Ok(mask_row)
+    }
+
+    /// Retrieves the list of static object IDs.
+    ///
+    /// # Arguments
+    /// * `key` - Object ID to retrieve.
+    ///
+    /// # Success
+    /// Returns the static object with the specified key.
+    ///
+    /// # Errors
+    /// Returns an error if the object is not found.
+    pub fn get_static_object(key: &str) -> Result<Arc<Mutex<Box<dyn StaticObjectTrait>>>, String> {
+        let global_state = GLOBAL_STATE
+            .read()
+            .map_err(|_| "Failed to lock on get_static_object".to_string())?;
+
+        if let Some(obj) = global_state.get_static_object(key) {
+            Ok(obj)
+        } else {
+            Err("Failed to get static object".to_string())
+        }
+    }
+
+    pub fn get_animated_object(
+        key: &str,
+    ) -> Result<Arc<Mutex<Box<dyn PhysicsObjectTrait>>>, String> {
+        let global_state = GLOBAL_STATE
+            .read()
+            .map_err(|_| "Failed to lock on get_animated_object".to_string())?;
+
+        if let Some(obj) = global_state.get_animated_object(key) {
+            Ok(obj)
+        } else {
+            Err("Failed to get animated object".to_string())
+        }
     }
 
     /// Retrieves the list of animated object IDs.
@@ -814,22 +850,29 @@ pub mod engine_state {
 #[cfg(test)]
 mod testing_global_state_machine {
 
+    use std::sync::{Arc, Mutex};
+
     use serial_test::serial;
 
     use crate::{
-        engine::structures::StaticObject,
-        state::engine_state::{
-            append_mask_to_row, get_animated_identifiable, get_animated_z_index_row,
-            get_static_z_index_row, remove_animated_identifiable, remove_static_identifiable,
+        engine::{
+            structures::{AnimatedObject, StaticObject},
+            traits::{PhysicsObjectTrait, StaticObjectTrait},
         },
-        units::{PointWithDeg, Size},
+        state::engine_state::{
+            append_mask_to_row, get_animated_identifiable, get_animated_object,
+            get_animated_z_index_row, get_static_z_index_row, remove_animated_identifiable,
+            remove_animated_object, remove_static_identifiable,
+        },
+        units::{PointWithDeg, Size, Velocity},
         utils::shapes::CustomShape,
     };
 
     use super::engine_state::{
         append_animated_id_to_z_index_row, append_animated_identifiable,
         append_static_id_to_z_index_row, append_static_identifiable, get_mask_row,
-        get_static_identifiable, remove_animated_z_index_from_row, remove_mask_from_row,
+        get_static_identifiable, get_static_object, insert_animated_object, insert_static_object,
+        remove_animated_z_index_from_row, remove_mask_from_row, remove_static_object,
         remove_static_z_index_from_row,
     };
 
@@ -844,17 +887,17 @@ mod testing_global_state_machine {
         )
     }
 
-    fn _gen_animated_object() -> StaticObject {
-        StaticObject::new(
+    fn _gen_animated_object() -> AnimatedObject {
+        AnimatedObject::new(
             1,
             String::from("test"),
             PointWithDeg::new(0.0, 0.0, None),
             Size::new(10.0, 5.0),
+            Velocity::new(),
             Some(vec![1]),
             CustomShape::gen_triangle(),
         )
     }
-
     #[test]
     #[serial]
     fn test_append_1_on_each_mask_row_and_remove_it() {
@@ -939,5 +982,62 @@ mod testing_global_state_machine {
         remove_animated_identifiable(id_template.clone()).unwrap();
 
         assert_eq!(get_animated_identifiable().unwrap().len(), 0);
+    }
+
+    #[test]
+    #[serial]
+    fn test_insert_static_object_into_map_and_remove() {
+        let obj: Arc<Mutex<Box<dyn StaticObjectTrait>>> = Arc::new(Mutex::new(Box::new(
+            _gen_static_object(),
+        )
+            as Box<dyn StaticObjectTrait>));
+        let obj_id = obj.lock().unwrap().get_id().to_string();
+
+        {
+            insert_static_object(obj_id.clone(), Arc::clone(&obj)).unwrap();
+        }
+
+        {
+            let obj_2 = get_static_object(&obj_id).unwrap();
+
+            assert!(Arc::ptr_eq(&obj, &obj_2));
+        }
+
+        {
+            remove_static_object(obj_id.clone()).unwrap();
+
+            assert!(get_static_object(&obj_id).is_err());
+        }
+    }
+
+    #[test]
+    #[serial]
+    fn test_insert_animated_object_into_map_and_remove() {
+        let obj: Arc<Mutex<Box<dyn PhysicsObjectTrait>>> = Arc::new(Mutex::new(Box::new(
+            _gen_animated_object(),
+        )
+            as Box<dyn PhysicsObjectTrait>));
+        let obj_id = obj.lock().unwrap().get_id().to_string();
+
+        {
+            insert_animated_object(obj_id.clone(), Arc::clone(&obj)).unwrap();
+        }
+
+        {
+            let obj_2 = get_animated_object(&obj_id).unwrap();
+
+            assert!(Arc::ptr_eq(&obj, &obj_2));
+        }
+
+        {
+            remove_animated_object(obj_id.clone()).unwrap();
+
+            assert!(get_animated_object(&obj_id).is_err());
+        }
+
+        {
+            let obj_2 = get_animated_object(&obj_id);
+            assert!(obj_2.is_err());
+        }
     }
 }
