@@ -43,9 +43,6 @@ pub mod engine_state {
     }
 
     impl Default for GlobalState {
-        /// Constructs a default `GlobalState` with empty registries and maps.
-        ///
-        /// Returns an instance of `GlobalState` with empty registries and maps.
         fn default() -> Self {
             Self {
                 masks: [(); 15].map(|_| Vec::new()),
@@ -84,7 +81,10 @@ pub mod engine_state {
                 return Err("mask out of range, must be between 1 and 15".to_string());
             }
 
-            self.masks[mask - 1].push(item);
+            if let Some(row) = self.masks.get_mut(mask - 1) {
+                row.push(item);
+            }
+
             Ok(())
         }
 
@@ -120,7 +120,11 @@ pub mod engine_state {
             if !(1..=255).contains(&row) {
                 return Err("z-index out of range, must be between 1 and 255".to_string());
             }
-            self.s_z_index[row - 1].push(id);
+
+            if let Some(row) = self.s_z_index.get_mut(row - 1) {
+                row.push(id);
+            }
+
             Ok(())
         }
 
@@ -136,7 +140,11 @@ pub mod engine_state {
             if !(1..=255).contains(&row) {
                 return Err("z-index out of range, must be between 1 and 255".to_string());
             }
-            self.a_z_index[row - 1].push(id);
+
+            if let Some(row) = self.a_z_index.get_mut(row - 1) {
+                row.push(id);
+            }
+
             Ok(())
         }
 
@@ -504,7 +512,7 @@ pub mod engine_state {
     ///
     /// # Errors
     /// Returns an error if the object ID fails to be added to the global state.
-    pub fn append_static_id_to_index_row(row: usize, id: String) -> Result<(), String> {
+    pub fn append_static_id_to_z_index_row(row: usize, id: String) -> Result<(), String> {
         let mut global_state = GLOBAL_STATE
             .write()
             .map_err(|_| "Failed to lock on append_id_to_index_row".to_string())?;
@@ -527,7 +535,7 @@ pub mod engine_state {
     ///
     /// # Errors
     /// Returns an error if the object ID fails to be added to the global state.
-    pub fn append_animated_id_to_index_row(row: usize, id: String) -> Result<(), String> {
+    pub fn append_animated_id_to_z_index_row(row: usize, id: String) -> Result<(), String> {
         let mut global_state = GLOBAL_STATE
             .write()
             .map_err(|_| "Failed to lock on append_id_to_index_row".to_string())?;
@@ -805,19 +813,24 @@ pub mod engine_state {
 
 #[cfg(test)]
 mod testing_global_state_machine {
-    use std::sync::{Arc, Mutex};
 
-    use super::engine_state::append_mask_to_row;
+    use serial_test::serial;
 
     use crate::{
-        engine::{structures::StaticObject, traits::StaticObjectTrait},
-        state::engine_state::GLOBAL_STATE,
-        types::state_machines::get_masks,
+        engine::structures::StaticObject,
+        state::engine_state::{
+            append_mask_to_row, get_animated_z_index_row, get_static_z_index_row,
+        },
         units::{PointWithDeg, Size},
         utils::shapes::CustomShape,
     };
 
-    fn gen_static_object() -> StaticObject {
+    use super::engine_state::{
+        append_animated_id_to_z_index_row, append_static_id_to_z_index_row, get_mask_row,
+        remove_animated_z_index_from_row, remove_mask_from_row, remove_static_z_index_from_row,
+    };
+
+    fn _gen_static_object() -> StaticObject {
         StaticObject::new(
             1,
             String::from("test"),
@@ -828,7 +841,7 @@ mod testing_global_state_machine {
         )
     }
 
-    fn gen_animated_object() -> StaticObject {
+    fn _gen_animated_object() -> StaticObject {
         StaticObject::new(
             1,
             String::from("test"),
@@ -838,19 +851,63 @@ mod testing_global_state_machine {
             CustomShape::gen_triangle(),
         )
     }
+
     #[test]
-    fn test_all_masks_helper_functions() {
-        let test_obj: Arc<Mutex<Box<dyn StaticObjectTrait>>> =
-            Arc::new(Mutex::new(Box::new(gen_static_object())));
+    #[serial]
+    fn test_append_1_on_each_mask_row_and_remove_it() {
+        let id_template = String::from("test");
+        for i in 1..15 {
+            append_mask_to_row(i, id_template.clone()).unwrap();
+        }
 
-        let obj = test_obj.lock().unwrap();
+        for i in 1..15 {
+            remove_mask_from_row(i, id_template.clone()).unwrap();
+        }
 
-        let test1 = get_masks().unwrap();
+        for i in 1..15 {
+            assert_eq!(get_mask_row(i).unwrap().len(), 0);
+        }
+    }
 
-        dbg!(test1);
+    #[test]
+    #[serial]
+    fn test_append_1_on_all_static_z_index_rows_and_remove_it() {
+        let id_template = String::from("test");
+        for i in 1..255 {
+            append_static_id_to_z_index_row(i, id_template.clone()).unwrap();
+        }
 
-        for idx in obj.get_masks() {
-            append_mask_to_row(idx, obj.get_id().to_string()).unwrap();
+        for i in 1..255 {
+            assert_eq!(get_static_z_index_row(i).unwrap().len(), 1);
+        }
+
+        for i in 1..255 {
+            remove_static_z_index_from_row(i, id_template.clone()).unwrap();
+        }
+
+        for i in 1..255 {
+            assert_eq!(get_static_z_index_row(i).unwrap().len(), 0);
+        }
+    }
+
+    #[test]
+    #[serial]
+    fn test_append_1_on_all_animated_z_index_rows_and_remove_it() {
+        let id_template = String::from("test");
+        for i in 1..255 {
+            append_animated_id_to_z_index_row(i, id_template.clone()).unwrap();
+        }
+
+        for i in 1..255 {
+            assert_eq!(get_animated_z_index_row(i).unwrap().len(), 1);
+        }
+
+        for i in 1..255 {
+            remove_animated_z_index_from_row(i, id_template.clone()).unwrap();
+        }
+
+        for i in 1..255 {
+            assert_eq!(get_animated_z_index_row(i).unwrap().len(), 0);
         }
     }
 }
