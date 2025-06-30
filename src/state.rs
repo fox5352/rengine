@@ -819,15 +819,18 @@ mod testing_global_state_machine {
     use crate::{
         engine::structures::StaticObject,
         state::engine_state::{
-            append_mask_to_row, get_animated_z_index_row, get_static_z_index_row,
+            append_mask_to_row, get_animated_identifiable, get_animated_z_index_row,
+            get_static_z_index_row, remove_animated_identifiable, remove_static_identifiable,
         },
         units::{PointWithDeg, Size},
         utils::shapes::CustomShape,
     };
 
     use super::engine_state::{
-        append_animated_id_to_z_index_row, append_static_id_to_z_index_row, get_mask_row,
-        remove_animated_z_index_from_row, remove_mask_from_row, remove_static_z_index_from_row,
+        append_animated_id_to_z_index_row, append_animated_identifiable,
+        append_static_id_to_z_index_row, append_static_identifiable, get_mask_row,
+        get_static_identifiable, remove_animated_z_index_from_row, remove_mask_from_row,
+        remove_static_z_index_from_row,
     };
 
     fn _gen_static_object() -> StaticObject {
@@ -909,5 +912,32 @@ mod testing_global_state_machine {
         for i in 1..255 {
             assert_eq!(get_animated_z_index_row(i).unwrap().len(), 0);
         }
+    }
+
+    #[test]
+    #[serial]
+    fn test_append_1_to_static_identifiables_and_remove_it() {
+        let id_template = String::from("test");
+        append_static_identifiable(id_template.clone()).unwrap();
+
+        assert_eq!(get_static_identifiable().unwrap().len(), 1);
+
+        remove_static_identifiable(id_template.clone()).unwrap();
+
+        assert_eq!(get_static_identifiable().unwrap().len(), 0);
+    }
+
+    #[test]
+    #[serial]
+    fn test_append_1_to_animated_identifiables_and_remove_it() {
+        let id_template = String::from("test");
+
+        append_animated_identifiable(id_template.clone()).unwrap();
+
+        assert_eq!(get_animated_identifiable().unwrap().len(), 1);
+
+        remove_animated_identifiable(id_template.clone()).unwrap();
+
+        assert_eq!(get_animated_identifiable().unwrap().len(), 0);
     }
 }
