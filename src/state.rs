@@ -845,6 +845,76 @@ pub mod engine_state {
 
         Ok(())
     }
+
+    // ====================
+    // Public Functions to bookkeep and manage Global State automagicly
+    // ====================
+
+    /// Adds a static object to the global state. and manage's the Global State automagicly
+    /// bookkeeping.
+    ///
+    /// # Arguments
+    /// * `obj` - Object to insert.
+    ///
+    /// # Success
+    /// Returns `Ok(())` if the object ID is successfully added to the global state.
+    ///
+    /// # Errors
+    /// Returns an error if the object ID fails to be added to the global state.
+    pub fn a_add_s_object(obj: Arc<Mutex<Box<dyn StaticObjectTrait>>>) -> Result<(), String> {
+        let lock_obj = obj
+            .lock()
+            .map_err(|_| "Failed to lock on a_add_s_object".to_string())?;
+
+        let id = lock_obj.get_id().to_string();
+
+        for row in lock_obj.get_masks() {
+            append_mask_to_row(row, id.clone())?;
+        }
+
+        append_static_id_to_z_index_row(lock_obj.get_z_index() as usize, id.clone())?;
+
+        append_static_identifiable(id.clone())?;
+
+        drop(lock_obj);
+
+        insert_static_object(id, obj)?;
+
+        Ok(())
+    }
+
+    /// Adds an animated object to the global state. and manage's the Global State automagicly
+    /// bookkeeping.
+    ///
+    /// # Arguments
+    /// * `obj` - Object to insert.
+    ///
+    /// # Success
+    /// Returns `Ok(())` if the object ID is successfully added to the global state.
+    ///
+    /// # Errors
+    /// Returns an error if the object ID fails to be added to the global state.
+    pub fn a_add_a_object(obj: Arc<Mutex<Box<dyn PhysicsObjectTrait>>>) -> Result<(), String> {
+        let lock_obj = obj
+            .lock()
+            .map_err(|_| "Failed to lock on a_add_a_object".to_string())?;
+
+        let id = lock_obj.get_id().to_string();
+
+        for row in lock_obj.get_masks() {
+            append_mask_to_row(row, id.clone())?;
+        }
+
+        append_animated_id_to_z_index_row(lock_obj.get_z_index() as usize, id.clone())?;
+
+        append_animated_identifiable(id.clone())?;
+
+        drop(lock_obj);
+
+        insert_animated_object(id, obj)?;
+
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -860,9 +930,9 @@ mod testing_global_state_machine {
             traits::{PhysicsObjectTrait, StaticObjectTrait},
         },
         state::engine_state::{
-            append_mask_to_row, get_animated_identifiable, get_animated_object,
-            get_animated_z_index_row, get_static_z_index_row, remove_animated_identifiable,
-            remove_animated_object, remove_static_identifiable,
+            a_add_a_object, a_add_s_object, append_mask_to_row, get_animated_identifiable,
+            get_animated_object, get_animated_z_index_row, get_static_z_index_row,
+            remove_animated_identifiable, remove_animated_object, remove_static_identifiable,
         },
         units::{PointWithDeg, Size, Velocity},
         utils::shapes::CustomShape,
@@ -1038,6 +1108,88 @@ mod testing_global_state_machine {
         {
             let obj_2 = get_animated_object(&obj_id);
             assert!(obj_2.is_err());
+        }
+    }
+
+    #[test]
+    #[serial]
+    fn test_auto_add_object_static() {
+        let obj = Arc::new(Mutex::new(
+            Box::new(_gen_static_object()) as Box<dyn StaticObjectTrait>
+        ));
+
+        let obj_id = obj.lock().unwrap().get_id().to_string();
+        let masks_rows = obj.lock().unwrap().get_masks();
+
+        // Perform the addition
+        a_add_s_object(Arc::clone(&obj)).unwrap();
+
+        // Check the object was inserted
+        let fetched_obj = get_static_object(&obj_id).unwrap();
+        assert!(Arc::ptr_eq(&obj, &fetched_obj));
+
+        // check if in ifentifiables
+        let statics = get_static_identifiable().unwrap();
+        assert!(statics.contains(&obj_id));
+
+        // check if in z-index rows
+        let z_row = get_static_z_index_row(obj.lock().unwrap().get_z_index() as usize).unwrap();
+        assert!(z_row.contains(&obj_id));
+
+        // Check it appears in the correct mask rows
+        for row in masks_rows {
+            let global_mask_row = get_mask_row(row).unwrap();
+            let mut found = false;
+
+            for global_mask in global_mask_row {
+                if global_mask == obj_id {
+                    found = true;
+                    break;
+                }
+            }
+
+            assert!(found);
+        }
+    }
+
+    #[test]
+    #[serial]
+    fn test_auto_add_object_animated() {
+        let obj = Arc::new(Mutex::new(
+            Box::new(_gen_animated_object()) as Box<dyn PhysicsObjectTrait>
+        ));
+
+        let obj_id = obj.lock().unwrap().get_id().to_string();
+        let masks_rows = obj.lock().unwrap().get_masks();
+
+        // Perform the addition
+        a_add_a_object(Arc::clone(&obj)).unwrap();
+
+        // Check the object was inserted
+        let fetched_obj = get_animated_object(&obj_id).unwrap();
+        assert!(Arc::ptr_eq(&obj, &fetched_obj));
+
+        // check if in identifiables
+        let anims = get_animated_identifiable().unwrap();
+        assert!(anims.contains(&obj_id));
+
+        // check if in z-index rows
+        let z_row = get_animated_z_index_row(obj.lock().unwrap().get_z_index() as usize).unwrap();
+        assert!(z_row.contains(&obj_id));
+
+        // Check it appears in the correct mask rows
+        for row in masks_rows {
+            let global_mask_row = get_mask_row(row).unwrap();
+            let mut found = false;
+
+            for global_mask in global_mask_row {
+                if global_mask == obj_id {
+                    found = true;
+                    break;
+                }
+            }
+
+            assert!(found);
         }
     }
 }
