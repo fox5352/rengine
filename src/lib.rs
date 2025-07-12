@@ -2,6 +2,7 @@
 pub mod engine; // Contains core game object definitions and traits
 pub mod manager;
 pub mod scene;
+pub mod state;
 pub mod types;
 pub mod units;
 pub mod utils; // Defines the game world and holds collections of objects // Contains the game loop and manages object updates/input
