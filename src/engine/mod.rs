@@ -121,7 +121,10 @@ pub mod structures {
     use uuid::Uuid;
 
     use crate::{
-        types::state_machines::{GLOBAL_STATE, GlobalStateResult},
+        state::engine_state::{
+            get_animated_identifiable, get_animated_object, get_mask_row, get_static_identifiable,
+            get_static_object,
+        },
         units::{PointWithDeg, Size, Velocity},
         utils::{collision_cal::check_collision, shapes::CustomShape, util_items::gen_id},
     };
@@ -318,39 +321,35 @@ pub mod structures {
 
     impl CollisionTrait for AnimatedObject {
         fn check_collision(&self, new_point: PointWithDeg) -> bool {
-            let global_state = match GLOBAL_STATE.write() {
-                Err(_) => panic!(
-                    "Failed to lock global state on collion chekc {}:{}",
-                    self.id, self.name
-                ),
-                Ok(global_state) => global_state,
-            };
-
             let _virtual_obj = (new_point, self.size, self.get_shape());
 
             for self_masks_row_index in self.masks.iter() {
-                let row = &global_state.get_masks()[*self_masks_row_index];
+                let row_of_mask =
+                    get_mask_row(*self_masks_row_index).expect("failed to get mask row");
 
                 // loop over row of related masks
-                // for global_masks_id in masks[*self_masks_id].iter() {
-                //     match global_state.get_obj_by_mask_id(global_masks_id) {
-                //         GlobalStateResult::StaticOjbect(obj) => {
-                //             let obj = obj.lock().unwrap();
-                //             return check_collision(
-                //                 virtual_obj,
-                //                 (obj.get_pos(), obj.get_size(), obj.get_shape()),
-                //             );
-                //         }
-                //         GlobalStateResult::Animatedbject(obj) => {
-                //             let obj = obj.lock().unwrap();
-                //             return check_collision(
-                //                 virtual_obj,
-                //                 (obj.get_pos(), obj.get_size(), obj.get_shape()),
-                //             );
-                //         }
-                //         GlobalStateResult::None => (),
-                //     }
-                // }
+                for obejct_id in row_of_mask.iter() {
+                    if get_static_identifiable().unwrap().contains(obejct_id) {
+                        // TODO: get static object
+                        let obj = get_static_object(&obejct_id).unwrap();
+                        let obj = obj.lock().unwrap();
+
+                        return check_collision(
+                            _virtual_obj,
+                            (obj.get_pos(), obj.get_size(), obj.get_shape()),
+                        );
+                    } else if get_animated_identifiable().unwrap().contains(obejct_id) {
+                        // TODO: get animated object
+
+                        let obj = get_animated_object(&obejct_id).unwrap();
+                        let obj = obj.lock().unwrap();
+
+                        return check_collision(
+                            _virtual_obj,
+                            (obj.get_pos(), obj.get_size(), obj.get_shape()),
+                        );
+                    }
+                }
             }
 
             false

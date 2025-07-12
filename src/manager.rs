@@ -1,10 +1,12 @@
 use std::{
-    sync::Arc,
     thread::sleep,
     time::{Duration, Instant},
 };
 
-use crate::{scene::World, types::state_machines::GLOBAL_STATE};
+use crate::{
+    scene::World,
+    state::engine_state::{a_add_a_object, a_add_s_object},
+};
 
 /// Populates the global state from a given scene by extracting and registering
 /// all static and physics objects, their identifiers, and associated mask indices.
@@ -22,56 +24,12 @@ use crate::{scene::World, types::state_machines::GLOBAL_STATE};
 /// # Errors
 /// - Mask appending failures are logged but do not stop execution.
 pub fn populate_global_state(scene: &World) {
-    let mut global_state = GLOBAL_STATE.write().expect("Failed to lock global state");
-
-    // Populate static objects
-    for obj in &scene.s_objects {
-        let static_obj = obj
-            .lock()
-            .expect("Failed to lock static object during population");
-
-        let id = static_obj.get_id().to_string();
-        let mask_indices = static_obj.get_masks();
-
-        // z_index
-        let z_index = static_obj.get_z_index();
-
-        global_state.s_z_index[z_index as usize].push(id.clone());
-
-        // Register object in appropriate masks
-        for index in mask_indices {
-            if let Err(e) = global_state.append_mask(index, id.clone()) {
-                eprintln!("Failed to append static object to mask: {}", e);
-            }
-        }
-
-        // Register object in static lookups
-        global_state.s_identifiables.push(id.clone());
-        global_state.insert_s_map(id, Arc::clone(&obj));
+    for static_obj in &scene.s_objects {
+        a_add_s_object(static_obj).expect("failed to populate static objects to global state");
     }
 
-    // Populate active (physics) objects
-    for obj in &scene.a_objects {
-        let physics_obj = obj
-            .lock()
-            .expect("Failed to lock physics object during population");
-
-        let id = physics_obj.get_id().to_string();
-        let mask_indices = physics_obj.get_masks();
-
-        let z_index = physics_obj.get_z_index();
-        global_state.a_z_index[z_index as usize].push(id.clone());
-
-        // Register object in appropriate masks
-        for index in mask_indices {
-            if let Err(e) = global_state.append_mask(index, id.clone()) {
-                eprintln!("Failed to append active object to mask: {}", e);
-            }
-        }
-
-        // Register object in physics lookups
-        global_state.a_identifiables.push(id.clone());
-        global_state.insert_a_map(id, Arc::clone(&obj));
+    for animated_object in &scene.a_objects {
+        a_add_a_object(animated_object).unwrap();
     }
 }
 
@@ -141,7 +99,6 @@ pub fn run(scene: World) {
     let mut game_loop = GameLoop::new(scene);
 
     // Debug counter for development testing
-    let mut counter = 0;
     // Target 60 FPS (16.666ms per frame)
     const FRAME_TIME: Duration = Duration::from_micros(16_666);
 

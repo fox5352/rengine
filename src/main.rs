@@ -8,7 +8,7 @@ use rengine::{
 
 fn main() {
     let floor = Box::new(StaticObject::new(
-        0,
+        1,
         String::from("Floor"),
         PointWithDeg::new(400.0, 600.0, None),
         Size::new(1400.0, 4.0),
@@ -19,7 +19,7 @@ fn main() {
     let pos = PointWithDeg::new(250.0, 250.0, None);
     let size = Size::new(50.0, 50.0);
     let moving_platform = Box::new(AnimatedObject::new(
-        0,
+        1,
         String::from("Moving Shape"),
         pos,
         size,
@@ -29,7 +29,7 @@ fn main() {
     ));
 
     let right_wall = Box::new(StaticObject::new(
-        0,
+        1,
         String::from("Right Wall"),
         PointWithDeg::new(500.0, 250.0, None),
         Size::new(10.0, 80.0),

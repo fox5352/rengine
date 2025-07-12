@@ -8,8 +8,11 @@ use sdl2::rect::Point;
 // Game logic modules you’ve built
 use crate::manager::GameLoop;
 use crate::scene::World;
+use crate::state::engine_state::{
+    get_animated_object, get_animated_z_index_row, get_static_object, get_static_z_index_row,
+};
 use crate::types::KeyAction;
-use crate::types::state_machines::{GLOBAL_STATE, push_input_action};
+use crate::types::state_machines::push_input_action;
 use crate::utils::collision_cal::transform_shape;
 
 // Target ~60 FPS => 1_000_000 µs / 60 ≈ 16,666 µs
@@ -114,54 +117,41 @@ impl Renderer {
     }
 
     pub fn render(&mut self) {
-        let global_state = GLOBAL_STATE.write().expect("Failed to lock global state");
+        for row_index in 1..255 {
+            for s_obj_id in get_static_z_index_row(row_index).unwrap() {
+                let obj = get_static_object(&s_obj_id).unwrap();
+                let obj = obj.lock().unwrap();
 
-        for row in 0..255 {
-            for a_obj_id in global_state.s_z_index[row].iter() {
-                // TODO: draw static object
-                let id = a_obj_id.clone().to_string();
+                println!("drawing {}", obj.get_name());
 
-                if let Some(obj) = global_state.get_s_map_value(&id) {
-                    let obj = obj.lock().unwrap();
+                let cords: Vec<Point> =
+                    transform_shape(&obj.get_pos(), &obj.get_size(), &obj.get_shape())
+                        .iter()
+                        .map(|(x, y)| Point::new(*x as i32, *y as i32))
+                        .collect();
 
-                    println!("drawing {}", obj.get_name());
-
-                    let cords: Vec<Point> =
-                        transform_shape(&obj.get_pos(), &obj.get_size(), &obj.get_shape())
-                            .iter()
-                            .map(|(x, y)| Point::new(*x as i32, *y as i32))
-                            .collect();
-
-                    self.canvas.set_draw_color(Color::RGBA(255, 0, 24, 255));
-                    self.canvas.draw_lines(&cords[..]).unwrap();
-                }
+                self.canvas.set_draw_color(Color::RGBA(255, 0, 24, 255));
+                self.canvas.draw_lines(&cords[..]).unwrap();
             }
+            for a_obj_id in get_animated_z_index_row(row_index).unwrap() {
+                let obj = get_animated_object(&a_obj_id).unwrap();
+                let obj = obj.lock().unwrap();
 
-            for a_col_id in global_state.a_z_index[row].iter() {
-                // TODO: draw animated object
-                let id = a_col_id.clone().to_string();
+                println!("drawing {}", obj.get_name());
 
-                if let Some(obj) = global_state.get_a_map_value(&id) {
-                    let obj = obj.lock().unwrap();
+                let cords: Vec<Point> =
+                    transform_shape(&obj.get_pos(), &obj.get_size(), &obj.get_shape())
+                        .iter()
+                        .map(|(x, y)| Point::new(*x as i32, *y as i32))
+                        .collect();
 
-                    println!("drawing {}", obj.get_name());
+                self.canvas.set_draw_color(Color::RGBA(204, 85, 0, 255));
+                self.canvas.draw_lines(&cords[..]).unwrap();
 
-                    let cords: Vec<Point> =
-                        transform_shape(&obj.get_pos(), &obj.get_size(), &obj.get_shape())
-                            .iter()
-                            .map(|(x, y)| Point::new(*x as i32, *y as i32))
-                            .collect();
-
-                    self.canvas.set_draw_color(Color::RGBA(204, 85, 0, 255));
-
-                    self.canvas.draw_lines(&cords[..]).unwrap();
-
-                    let p1 = cords[..][0];
-                    let [p2, p3] = [cords[1..][0], cords[1..][1]];
-
-                    self.fill_triangle(p1, &[p2, p3]);
-                    self.fill_triangle(p2, &[p1, p3]);
-                }
+                let p1 = cords[..][0];
+                let [p2, p3] = [cords[1..][0], cords[1..][1]];
+                self.fill_triangle(p1, &[p2, p3]);
+                self.fill_triangle(p2, &[p1, p3]);
             }
         }
     }
@@ -222,15 +212,17 @@ pub fn start_window(scene: World) {
         }
 
         // Update game state (e.g., physics, AI, etc.)
-        // TODO: #[cfg(debug_assertions)]
-        // {
-        //     println!("Updating game state");
-        // }
+        // TODO:
+        #[cfg(debug_assertions)]
+        {
+            println!("Updating game state");
+        }
 
         game_state.update();
 
         // Clear the screen to black
-        // TODO: #[cfg(debug_assertions)]
+        // TODO:
+        // #[cfg(debug_assertions)]
         // {
         //     println!("Clearing screen");
         // }
