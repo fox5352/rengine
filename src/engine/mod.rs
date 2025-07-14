@@ -38,7 +38,7 @@ pub mod traits {
     }
 
     pub trait CollisionTrait {
-        fn check_collision(&self, new: PointWithDeg);
+        fn check_collision(&self, new: PointWithDeg) -> bool;
     }
 
     /// The `engine` module defines game objects and their traits.
@@ -320,39 +320,58 @@ pub mod structures {
     }
 
     impl CollisionTrait for AnimatedObject {
-        fn check_collision(&self, new_point: PointWithDeg) {
-            //     let _virtual_obj = (new_point, self.size, self.get_shape());
-            //
-            //     for self_masks_row_index in self.masks.iter() {
-            //         let row_of_mask =
-            //             get_mask_row(*self_masks_row_index).expect("failed to get mask row");
-            //
-            //         // loop over row of related masks
-            //         for obejct_id in row_of_mask.iter() {
-            //             if get_static_identifiable().unwrap().contains(obejct_id) {
-            //                 // TODO: get static object
-            //                 let obj = get_static_object(&obejct_id).unwrap();
-            //                 let obj = obj.lock().unwrap();
-            //
-            //                 return check_collision(
-            //                     _virtual_obj,
-            //                     (obj.get_pos(), obj.get_size(), obj.get_shape()),
-            //                 );
-            //             } else if get_animated_identifiable().unwrap().contains(obejct_id) {
-            //                 // TODO: get animated object
-            //
-            //                 let obj = get_animated_object(&obejct_id).unwrap();
-            //                 let obj = obj.lock().unwrap();
-            //
-            //                 return check_collision(
-            //                     _virtual_obj,
-            //                     (obj.get_pos(), obj.get_size(), obj.get_shape()),
-            //                 );
-            //             }
-            //         }
-            //     }
-            //
-            //     false
+        fn check_collision(&self, new_point: PointWithDeg) -> bool {
+            let this_obj_id = self.get_id().to_string();
+            let _virtual_obj = (new_point, self.size, self.get_shape());
+
+            for row in 1..15 {
+                let row_of_mask =
+                    get_mask_row(row).expect("failed to get mask row at collision check");
+
+                for global_object_id in row_of_mask.iter() {
+                    // Skip self
+                    if *global_object_id == this_obj_id {
+                        continue;
+                    }
+
+                    if get_static_identifiable()
+                        .unwrap()
+                        .contains(global_object_id)
+                    {
+                        let g_obj = get_static_object(global_object_id).unwrap();
+                        let g_obj = g_obj.lock().unwrap();
+
+                        println!(
+                            "{}:{}, {}:{}",
+                            g_obj.get_name(),
+                            g_obj.get_pos().x,
+                            self.get_name(),
+                            new_point.x
+                        );
+
+                        if check_collision(
+                            _virtual_obj.clone(),
+                            (g_obj.get_pos(), g_obj.get_size(), g_obj.get_shape()),
+                        ) {
+                            return true; // collision found
+                        }
+                    } else if get_animated_identifiable()
+                        .unwrap()
+                        .contains(global_object_id)
+                    {
+                        let g_obj = get_animated_object(global_object_id).unwrap();
+                        let g_obj = g_obj.lock().unwrap();
+
+                        if check_collision(
+                            _virtual_obj.clone(),
+                            (g_obj.get_pos(), g_obj.get_size(), g_obj.get_shape()),
+                        ) {
+                            return true; // collision found
+                        }
+                    }
+                }
+            }
+            false
         }
     }
 }

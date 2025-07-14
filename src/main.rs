@@ -38,7 +38,7 @@ fn main() {
     ));
 
     let mut _world = World::new();
-    _world.add_static(vec![floor, right_wall]);
+    _world.add_static(vec![right_wall]);
     _world.add_animated(vec![moving_platform]);
 
     start_window(_world);
