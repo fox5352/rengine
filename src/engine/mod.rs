@@ -38,7 +38,7 @@ pub mod traits {
     }
 
     pub trait CollisionTrait {
-        fn check_collision(&self, new: PointWithDeg) -> bool;
+        fn check_collision(&self, new: PointWithDeg);
     }
 
     /// The `engine` module defines game objects and their traits.
@@ -320,39 +320,39 @@ pub mod structures {
     }
 
     impl CollisionTrait for AnimatedObject {
-        fn check_collision(&self, new_point: PointWithDeg) -> bool {
-            let _virtual_obj = (new_point, self.size, self.get_shape());
-
-            for self_masks_row_index in self.masks.iter() {
-                let row_of_mask =
-                    get_mask_row(*self_masks_row_index).expect("failed to get mask row");
-
-                // loop over row of related masks
-                for obejct_id in row_of_mask.iter() {
-                    if get_static_identifiable().unwrap().contains(obejct_id) {
-                        // TODO: get static object
-                        let obj = get_static_object(&obejct_id).unwrap();
-                        let obj = obj.lock().unwrap();
-
-                        return check_collision(
-                            _virtual_obj,
-                            (obj.get_pos(), obj.get_size(), obj.get_shape()),
-                        );
-                    } else if get_animated_identifiable().unwrap().contains(obejct_id) {
-                        // TODO: get animated object
-
-                        let obj = get_animated_object(&obejct_id).unwrap();
-                        let obj = obj.lock().unwrap();
-
-                        return check_collision(
-                            _virtual_obj,
-                            (obj.get_pos(), obj.get_size(), obj.get_shape()),
-                        );
-                    }
-                }
-            }
-
-            false
+        fn check_collision(&self, new_point: PointWithDeg) {
+            //     let _virtual_obj = (new_point, self.size, self.get_shape());
+            //
+            //     for self_masks_row_index in self.masks.iter() {
+            //         let row_of_mask =
+            //             get_mask_row(*self_masks_row_index).expect("failed to get mask row");
+            //
+            //         // loop over row of related masks
+            //         for obejct_id in row_of_mask.iter() {
+            //             if get_static_identifiable().unwrap().contains(obejct_id) {
+            //                 // TODO: get static object
+            //                 let obj = get_static_object(&obejct_id).unwrap();
+            //                 let obj = obj.lock().unwrap();
+            //
+            //                 return check_collision(
+            //                     _virtual_obj,
+            //                     (obj.get_pos(), obj.get_size(), obj.get_shape()),
+            //                 );
+            //             } else if get_animated_identifiable().unwrap().contains(obejct_id) {
+            //                 // TODO: get animated object
+            //
+            //                 let obj = get_animated_object(&obejct_id).unwrap();
+            //                 let obj = obj.lock().unwrap();
+            //
+            //                 return check_collision(
+            //                     _virtual_obj,
+            //                     (obj.get_pos(), obj.get_size(), obj.get_shape()),
+            //                 );
+            //             }
+            //         }
+            //     }
+            //
+            //     false
         }
     }
 }

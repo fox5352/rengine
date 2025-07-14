@@ -34,9 +34,9 @@ impl PhysicsObject for AnimatedObject {
             deg: self.pos.deg,
         };
 
-        let col = self.check_collision(new_pos);
+        self.check_collision(new_pos);
 
-        // if ! {
+        // if !col {
         //     self.pos = new_pos;
         // } else {
         //     println!("Collision detected BANG!!!");

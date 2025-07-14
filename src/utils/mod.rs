@@ -1,5 +1,3 @@
-pub mod area_calc {}
-
 pub mod util_items {
     use uuid::Uuid;
 

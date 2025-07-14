@@ -122,8 +122,6 @@ impl Renderer {
                 let obj = get_static_object(&s_obj_id).unwrap();
                 let obj = obj.lock().unwrap();
 
-                println!("drawing {}", obj.get_name());
-
                 let cords: Vec<Point> =
                     transform_shape(&obj.get_pos(), &obj.get_size(), &obj.get_shape())
                         .iter()
@@ -136,8 +134,6 @@ impl Renderer {
             for a_obj_id in get_animated_z_index_row(row_index).unwrap() {
                 let obj = get_animated_object(&a_obj_id).unwrap();
                 let obj = obj.lock().unwrap();
-
-                println!("drawing {}", obj.get_name());
 
                 let cords: Vec<Point> =
                     transform_shape(&obj.get_pos(), &obj.get_size(), &obj.get_shape())
@@ -212,27 +208,18 @@ pub fn start_window(scene: World) {
         }
 
         // Update game state (e.g., physics, AI, etc.)
-        // TODO:
-        #[cfg(debug_assertions)]
-        {
-            println!("Updating game state");
-        }
+        debug_log!("update-loop", "Updating game state");
 
         game_state.update();
 
         // Clear the screen to black
-        // TODO:
-        // #[cfg(debug_assertions)]
-        // {
-        //     println!("Clearing screen");
-        // }
+        debug_log!("update-loop", "screen cleard");
+
         renderer.clear();
 
         // // ----- DRAWING START -----
-        //  TODO: #[cfg(debug_assertions)]
-        // {
-        //     println!("Drawing");
-        // }
+        debug_log!("update-loop", "Drawing");
+
         renderer.render();
         // You can draw more shapes here!
         // ----- DRAWING END -----

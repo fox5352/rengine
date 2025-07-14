@@ -57,7 +57,6 @@ fn main() {
     //     {
     //         counter += 1;
     //         if counter >= 5 {
-    //             println!("ran 5 cycles");
     //             let mut buffer = String::new();
     //             std::io::stdin().read_line(&mut buffer).expect("testing");
     //             counter = 0;

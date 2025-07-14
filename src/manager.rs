@@ -110,21 +110,6 @@ pub fn run(scene: World) {
         // Update all game objects for this frame
         game_loop.update();
 
-        // Debug code - only compiled in debug builds
-        // TODO: #[cfg(debug_assertions)]
-        // {
-        //     counter += 1;
-        //     // Pause execution every 5 frames for debugging/testing
-        //     if counter >= 50 {
-        //         println!("ran 50 cycles");
-        //         let mut buffer = String::new();
-        //         std::io::stdin()
-        //             .read_line(&mut buffer)
-        //             .expect("Failed to read debug input");
-        //         counter = 0;
-        //     }
-        // }
-
         // Frame rate limiting - ensure consistent 60 FPS
         let elapsed = start.elapsed();
         if elapsed < FRAME_TIME {

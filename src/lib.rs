@@ -1,3 +1,6 @@
+#[macro_use]
+pub mod macros;
+
 // Declare the modules so Rust knows about them
 pub mod engine; // Contains core game object definitions and traits
 pub mod manager;
