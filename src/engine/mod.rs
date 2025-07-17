@@ -38,7 +38,8 @@ pub mod traits {
     }
 
     pub trait CollisionTrait {
-        fn check_collision(&self, new: PointWithDeg) -> bool;
+        fn check_collision(&self, new_point: PointWithDeg) -> bool;
+        fn move_object(&mut self) -> bool;
     }
 
     /// The `engine` module defines game objects and their traits.
@@ -320,6 +321,13 @@ pub mod structures {
     }
 
     impl CollisionTrait for AnimatedObject {
+        /// Check if the object collides with another object
+        ///
+        /// # Arguments
+        /// * `new_point` - The new position of the object.
+        ///
+        /// # Returns
+        /// true if the object collides with another object, false otherwise.
         fn check_collision(&self, new_point: PointWithDeg) -> bool {
             let this_obj_id = self.get_id().to_string();
             let _virtual_obj = (new_point, self.size, self.get_shape());
@@ -371,6 +379,10 @@ pub mod structures {
                     }
                 }
             }
+            false
+        }
+
+        fn move_object(&mut self) -> bool {
             false
         }
     }
