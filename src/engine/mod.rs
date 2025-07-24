@@ -39,7 +39,7 @@ pub mod traits {
 
     pub trait CollisionTrait {
         fn check_collision(&self, new_point: PointWithDeg) -> bool;
-        fn move_object(&mut self) -> bool;
+        fn move_object(&mut self, delta_time: f32) -> bool;
     }
 
     /// The `engine` module defines game objects and their traits.
@@ -349,14 +349,6 @@ pub mod structures {
                         let g_obj = get_static_object(global_object_id).unwrap();
                         let g_obj = g_obj.lock().unwrap();
 
-                        println!(
-                            "{}:{}, {}:{}",
-                            g_obj.get_name(),
-                            g_obj.get_pos().x,
-                            self.get_name(),
-                            new_point.x
-                        );
-
                         if check_collision(
                             _virtual_obj.clone(),
                             (g_obj.get_pos(), g_obj.get_size(), g_obj.get_shape()),
@@ -382,8 +374,29 @@ pub mod structures {
             false
         }
 
-        fn move_object(&mut self) -> bool {
-            false
+        fn move_object(&mut self, delta_time: f32) -> bool {
+            let vel = self.velocity.scale(delta_time); // Apply delta_time to velocity
+            let mut factor = 1.0;
+
+            while factor >= 0.1 {
+                let scaled_vel = vel.scale(factor);
+                let new_pos = PointWithDeg {
+                    x: self.pos.x + scaled_vel.x,
+                    y: self.pos.y + scaled_vel.y,
+                    deg: self.pos.deg,
+                };
+
+                if !self.check_collision(new_pos) {
+                    self.pos = new_pos;
+                    self.velocity = self.velocity.scale(factor); // scale original velocity
+                    return false;
+                }
+
+                factor -= 0.1;
+            }
+
+            // No valid position found; object remains where it is
+            true
         }
     }
 }
