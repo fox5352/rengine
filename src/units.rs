@@ -196,4 +196,3 @@ mod tests {
         assert_eq!(v, Velocity { x: 3.0, y: 4.0 });
     }
 }
-

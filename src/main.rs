@@ -23,9 +23,9 @@ fn main() {
         String::from("Moving Shape"),
         pos,
         size,
-        Velocity { y: 0.0, x: 80.0 },
+        Velocity { y: 0.0, x: 150.0 },
         Some(vec![1]),
-        CustomShape::gen_triangle(),
+        CustomShape::gen_rectangle(),
     ));
 
     let right_wall = Box::new(StaticObject::new(

@@ -174,6 +174,34 @@ pub mod collision_cal {
             .collect()
     }
 
+    #[derive(Debug)]
+    struct BoundingBox {
+        left: f32,
+        right: f32,
+        top: f32,
+        bottom: f32,
+    }
+
+    fn get_bounding_box(points: &[(f32, f32)]) -> BoundingBox {
+        let left = points.iter().map(|(x, _)| *x).fold(f32::INFINITY, f32::min);
+        let right = points
+            .iter()
+            .map(|(x, _)| *x)
+            .fold(f32::NEG_INFINITY, f32::max);
+        let top = points.iter().map(|(_, y)| *y).fold(f32::INFINITY, f32::min);
+        let bottom = points
+            .iter()
+            .map(|(_, y)| *y)
+            .fold(f32::NEG_INFINITY, f32::max);
+
+        BoundingBox {
+            left,
+            right,
+            top,
+            bottom,
+        }
+    }
+
     /// Checks if two objects collide using Axis-Aligned Bounding Box (AABB) collision detection.
     ///
     /// This method assumes that both objects are represented as rectangles aligned to the axes,
@@ -192,21 +220,19 @@ pub mod collision_cal {
         obj1: (PointWithDeg, Size, CustomShape),
         obj2: (PointWithDeg, Size, CustomShape),
     ) -> bool {
-        let obj1_pos = obj1.0;
-        let obj1_size = obj1.1;
+        // Get the actual transformed points (same as what's rendered)
+        let obj1_points = transform_shape(&obj1.0, &obj1.1, &obj1.2);
+        let obj2_points = transform_shape(&obj2.0, &obj2.1, &obj2.2);
 
-        let obj2_pos = obj2.0;
-        let obj2_size = obj2.1;
+        // Calculate bounding boxes from actual transformed points
+        let obj1_bounds = get_bounding_box(&obj1_points);
+        let obj2_bounds = get_bounding_box(&obj2_points);
 
-        let obj1_x = obj1_pos.x;
-        let obj1_y = obj1_pos.y;
-        let obj2_x = obj2_pos.x;
-        let obj2_y = obj2_pos.y;
-
-        obj1_x < obj2_x + obj2_size.x
-            && obj1_x + obj1_size.x > obj2_x
-            && obj1_y < obj2_y + obj2_size.y
-            && obj1_y + obj1_size.y > obj2_y
+        // Check AABB collision
+        obj1_bounds.left < obj2_bounds.right
+            && obj1_bounds.right > obj2_bounds.left
+            && obj1_bounds.top < obj2_bounds.bottom
+            && obj1_bounds.bottom > obj2_bounds.top
     }
 }
 
@@ -216,8 +242,6 @@ mod test_collision_cal {
         units::{PointWithDeg, Size},
         utils::{collision_cal::check_collision, shapes::CustomShape},
     };
-    //
-    /*     use super::collision_cal::transform_shape; */
 
     #[test]
     fn test_aabb_collision() {
