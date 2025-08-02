@@ -3,6 +3,7 @@
 **rengine** is a lightweight 2D game engine written in Rust. It provides a basic game loop and foundational features, engines in the early stages of development
 
 ## Implemented
+
 - Scene loading
 - Static objects
 - Animated objects
@@ -16,7 +17,11 @@
 
 ## Getting Started
 
-To use **rengine**, clone the repository and build it with Cargo. It’s currently in early development and focused on core engine functionality.
+To use **rengine**, clone the repository and build it with Cargo. It’s currently in early development and focused on core engine functionality. so i wont bother explaining it yet till i have a more solid stable verion
+
+## Overview
+
+![](./docs/overview.png)
 
 ## Project Status
 
