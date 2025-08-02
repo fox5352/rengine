@@ -207,15 +207,14 @@ pub fn start_window(scene: World) {
             }
         }
 
-        // Update game state (e.g., physics, AI, etc.)
-        debug_log!("update-loop", "Updating game state");
-
-        game_state.update();
-
         // Clear the screen to black
         debug_log!("update-loop", "screen cleard");
 
         renderer.clear();
+
+        // Update game state (e.g., physics, AI, etc.)
+        debug_log!("update-loop", "Updating game state");
+        game_state.update();
 
         // // ----- DRAWING START -----
         debug_log!("update-loop", "Drawing");

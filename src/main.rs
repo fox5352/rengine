@@ -42,31 +42,4 @@ fn main() {
     _world.add_animated(vec![moving_platform]);
 
     start_window(_world);
-
-    // let mut game_loop = GameLoop::new(_world);
-    //
-    // let mut counter = 0;
-    // const FRAME_TIME: Duration = Duration::from_micros(16_666); // 60 FPS
-    //
-    // loop {
-    //     let start = Instant::now();
-    //
-    //     game_loop.update();
-    //
-    //     #[cfg(debug_assertions)]
-    //     {
-    //         counter += 1;
-    //         if counter >= 5 {
-    //             let mut buffer = String::new();
-    //             std::io::stdin().read_line(&mut buffer).expect("testing");
-    //             counter = 0;
-    //         }
-    //     }
-    //
-    //     // Frame limiter to simulate ~60 FPS
-    //     let elapsed = start.elapsed();
-    //     if elapsed < FRAME_TIME {
-    //         sleep(FRAME_TIME - elapsed);
-    //     }
-    // }
 }
