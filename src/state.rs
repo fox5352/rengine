@@ -6,7 +6,7 @@ pub mod engine_state {
 
     use once_cell::sync::Lazy;
 
-    use crate::engine::traits::{PhysicsObjectTrait, StaticObjectTrait};
+    use crate::engine::traits::{BaseTrait, PhysicsObjectTrait, StaticObjectTrait};
 
     /// Represents possible return types when querying the global state.
     pub enum GlobalStateResult {
@@ -16,6 +16,16 @@ pub mod engine_state {
         Animatedbject(Arc<Mutex<Box<dyn PhysicsObjectTrait>>>),
         /// No object found.
         None,
+    }
+
+    pub enum ObjectType {
+        StaticObject,
+        AnimatedObject        
+    }
+
+    pub struct Capsule {
+        obj_type: ObjectType,
+        obj: Box<dyn BaseTrait>
     }
 
     /// Central registry for managing masks, z-index ordering, and object mappings.
@@ -40,6 +50,8 @@ pub mod engine_state {
 
         /// Map of animated/physics objects.
         a_map: HashMap<String, Arc<Mutex<Box<dyn PhysicsObjectTrait>>>>,
+        // TODO: i want to put a_map and s_map in a hasmap here they both impl basetrait
+        map: HashMap<String, Capsule>
     }
 
     impl Default for GlobalState {
@@ -52,6 +64,7 @@ pub mod engine_state {
                 a_identifiables: Vec::new(),
                 s_map: HashMap::new(),
                 a_map: HashMap::new(),
+                map: HashMap::new()
             }
         }
     }

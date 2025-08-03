@@ -1,9 +1,17 @@
 pub mod traits {
+    use std::any::Any;
+
     use crate::{
         units::{PointWithDeg, Size, Velocity},
         utils::shapes::CustomShape,
     };
     use uuid::Uuid;
+
+    pub trait BaseTrait: Any +Send+Sync {
+        fn update(&mut self, delta_time:f32);
+        fn as_any(&self) -> &dyn Any;
+        fn as_any_mut(&mut self) -> &mut dyn Any;
+    }
 
     pub trait ZIndexTrait {
         fn get_z_index(&self) -> u8;
@@ -84,10 +92,8 @@ pub mod traits {
 
 
     /// full trait
-    /// 
-    pub trait StaticObjectTrait:
-        Send
-        + Sync
+    pub trait CommonObjectTraits:
+        BaseTrait
         + ZIndexTrait
         + Object
         + IdentifiableTrait
@@ -96,61 +102,48 @@ pub mod traits {
         + SizeTrait
         + PointTrait
         + ShapeTrait
-    {
-    }
-    impl<
-        T: Send
-            + Sync
-            + ZIndexTrait
-            + Object
-            + IdentifiableTrait
-            + NamedTrait
-            + MasksTrait
-            + SizeTrait
-            + PointTrait
-            + ShapeTrait,
-    > StaticObjectTrait for T
-    {
-    }
+    {}
 
-    pub trait PhysicsObjectTrait:
-        Send
-        + Sync
-        + ZIndexTrait
-        + Object
-        + PhysicsObject
-        + IdentifiableTrait
-        + NamedTrait
-        + MasksTrait
-        + VelocityTrait
-        + SizeTrait
-        + PointTrait
-        + ShapeTrait
-        + CollisionTrait
-        + SequenceTrait
-    {
-    }
-    impl<
-        T: Send
-            + Sync
+    impl<T> CommonObjectTraits for T where
+        T: BaseTrait
             + ZIndexTrait
             + Object
-            + PhysicsObject
             + IdentifiableTrait
             + NamedTrait
             + MasksTrait
-            + VelocityTrait
             + SizeTrait
             + PointTrait
             + ShapeTrait
+    {}
+
+    pub trait StaticObjectTrait: CommonObjectTraits + Send + Sync {}
+
+    impl<T> StaticObjectTrait for T where T: CommonObjectTraits + Send + Sync {}
+
+    pub trait PhysicsObjectTrait:
+        CommonObjectTraits
+        + PhysicsObject
+        + VelocityTrait
+        + CollisionTrait
+        + SequenceTrait
+        + Send
+        + Sync
+    {}
+
+    impl<T> PhysicsObjectTrait for T where
+        T: CommonObjectTraits
+            + PhysicsObject
+            + VelocityTrait
             + CollisionTrait
             + SequenceTrait
-    > PhysicsObjectTrait for T
-    {
-    }
+            + Send
+            + Sync
+    {}
 }
 
 pub mod structures {
+    use std::any::Any;
+
     use uuid::Uuid;
 
     use crate::{
@@ -163,7 +156,7 @@ pub mod structures {
     };
 
     use super::traits::{
-        CollisionTrait, IdentifiableTrait, MasksTrait, NamedTrait, PhysicsObject, PhysicsObjectTrait, PointTrait, ScriptFn, SequenceParamTraits, SequenceTrait, ShapeTrait, SizeTrait, VelocityTrait, ZIndexTrait
+        BaseTrait, CollisionTrait, IdentifiableTrait, MasksTrait, NamedTrait, PhysicsObject, PhysicsObjectTrait, PointTrait, ScriptFn, SequenceParamTraits, SequenceTrait, ShapeTrait, SizeTrait, VelocityTrait, ZIndexTrait
     };
 
     /// A static object with position and size
@@ -252,6 +245,18 @@ pub mod structures {
         fn get_shape(&self) -> CustomShape {
             self.shape.clone()
         }
+    }
+
+    impl BaseTrait for StaticObject {
+        fn update(&mut self, delta_time:f32) {
+
+        }        
+        fn as_any(&self) -> &dyn Any {
+            self
+        }
+        fn as_any_mut(&mut self) -> &mut dyn Any {
+            self
+        }    
     }
 
     /// Placeholder for animated objects (not implemented)
@@ -441,7 +446,7 @@ pub mod structures {
         fn run_sequence(&mut self) {
             if let Some(sequence) = &mut self.sequence {
                 if !sequence.is_empty() {
-                    unsafe {
+                    let res = unsafe {
                         let closure_ptr: *mut Box<
                             dyn for<'a> FnMut(&'a mut dyn SequenceParamTraits) -> bool + Send + Sync + 'static
                         > = &mut sequence[0];
@@ -450,10 +455,25 @@ pub mod structures {
                             dyn for<'a> FnMut(&'a mut dyn SequenceParamTraits) -> bool + Send + Sync + 'static
                         > = &mut *closure_ptr;
 
-                        closure(self as &mut dyn SequenceParamTraits);
-                    }
+                        closure(self as &mut dyn SequenceParamTraits)
+                    };
+
+                    //TODO: segment of sequence complete move to next segment
                 }
             }
+        }
+    }
+
+    impl BaseTrait for AnimatedObject {
+        fn update(&mut self, delta_time: f32) {
+            self.run_sequence();
+            self.process(delta_time);
+        }
+        fn as_any(&self) -> &dyn Any {
+            self
+        }
+        fn as_any_mut(&mut self) -> &mut dyn Any {
+            self
         }
     }
 }
