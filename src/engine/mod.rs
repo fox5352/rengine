@@ -54,7 +54,37 @@ pub mod traits {
         fn process(&mut self, delta_time: f32);
     }
 
+
+    pub trait SequenceParamTraits:
+    Send
+    +Sync
+    + VelocityTrait
+    + PointTrait
+    + CollisionTrait
+    {
+    }
+    impl<T:
+    Send
+    +Sync
+    + VelocityTrait
+    + PointTrait
+    + CollisionTrait>
+    SequenceParamTraits for T {
+        
+    }
+
+    // Alias for the script function type
+    pub type ScriptFn = Box<dyn FnMut(&mut dyn SequenceParamTraits) -> bool + Send + Sync + 'static>;
+
+
+    pub trait SequenceTrait {
+    fn add_script(&mut self, script: Vec<ScriptFn>);
+    fn run_sequence(&mut self);
+}
+
+
     /// full trait
+    /// 
     pub trait StaticObjectTrait:
         Send
         + Sync
@@ -97,6 +127,7 @@ pub mod traits {
         + PointTrait
         + ShapeTrait
         + CollisionTrait
+        + SequenceTrait
     {
     }
     impl<
@@ -112,7 +143,8 @@ pub mod traits {
             + SizeTrait
             + PointTrait
             + ShapeTrait
-            + CollisionTrait,
+            + CollisionTrait
+            + SequenceTrait
     > PhysicsObjectTrait for T
     {
     }
@@ -131,8 +163,7 @@ pub mod structures {
     };
 
     use super::traits::{
-        CollisionTrait, IdentifiableTrait, MasksTrait, NamedTrait, PointTrait, ShapeTrait,
-        SizeTrait, VelocityTrait, ZIndexTrait,
+        CollisionTrait, IdentifiableTrait, MasksTrait, NamedTrait, PhysicsObject, PhysicsObjectTrait, PointTrait, ScriptFn, SequenceParamTraits, ShapeTrait, SizeTrait, VelocityTrait, ZIndexTrait
     };
 
     /// A static object with position and size
@@ -234,6 +265,7 @@ pub mod structures {
         pub masks: Vec<usize>,
         pub velocity: Velocity,
         pub shape: CustomShape,
+        pub sequence:Option<Vec<ScriptFn>>
     }
 
     impl AnimatedObject {
@@ -269,6 +301,7 @@ pub mod structures {
                 masks: masks.unwrap_or_default(),
                 velocity,
                 shape,
+                sequence:None
             }
         }
     }

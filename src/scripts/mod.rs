@@ -1,7 +1,7 @@
 use crate::{
     engine::{
         structures::{AnimatedObject, StaticObject},
-        traits::{CollisionTrait, Object, PhysicsObject, PointTrait, VelocityTrait},
+        traits::{CollisionTrait, Object, PhysicsObject, PhysicsObjectTrait, PointTrait, ScriptFn, SequenceParamTraits, SequenceTrait, VelocityTrait},
     },
     units::{PointWithDeg, Size},
 };
@@ -64,5 +64,29 @@ impl PhysicsObject for AnimatedObject {
         );
 
         println!("Velocity: x:{} y:{}", self.velocity.x, self.velocity.y);
+    }
+}
+
+impl SequenceTrait for AnimatedObject {
+    fn add_script(&mut self, script: Vec<ScriptFn>) {
+        self.sequence = Some(script);
+    }
+
+    fn run_sequence(&mut self) {
+        if let Some(sequence) = &mut self.sequence {
+            if !sequence.is_empty() {
+                unsafe {
+                    let closure_ptr: *mut Box<
+                        dyn for<'a> FnMut(&'a mut dyn SequenceParamTraits) -> bool + Send + Sync + 'static
+                    > = &mut sequence[0];
+
+                    let closure: &mut Box<
+                        dyn for<'a> FnMut(&'a mut dyn SequenceParamTraits) -> bool + Send + Sync + 'static
+                    > = &mut *closure_ptr;
+
+                    closure(self as &mut dyn SequenceParamTraits);
+                }
+            }
+        }
     }
 }
