@@ -163,7 +163,7 @@ pub mod structures {
     };
 
     use super::traits::{
-        CollisionTrait, IdentifiableTrait, MasksTrait, NamedTrait, PhysicsObject, PhysicsObjectTrait, PointTrait, ScriptFn, SequenceParamTraits, ShapeTrait, SizeTrait, VelocityTrait, ZIndexTrait
+        CollisionTrait, IdentifiableTrait, MasksTrait, NamedTrait, PhysicsObject, PhysicsObjectTrait, PointTrait, ScriptFn, SequenceParamTraits, SequenceTrait, ShapeTrait, SizeTrait, VelocityTrait, ZIndexTrait
     };
 
     /// A static object with position and size
@@ -430,6 +430,30 @@ pub mod structures {
 
             // No valid position found; object remains where it is
             true
+        }
+    }
+
+    impl SequenceTrait for AnimatedObject {
+        fn add_script(&mut self, script: Vec<ScriptFn>) {
+            self.sequence = Some(script);
+        }
+
+        fn run_sequence(&mut self) {
+            if let Some(sequence) = &mut self.sequence {
+                if !sequence.is_empty() {
+                    unsafe {
+                        let closure_ptr: *mut Box<
+                            dyn for<'a> FnMut(&'a mut dyn SequenceParamTraits) -> bool + Send + Sync + 'static
+                        > = &mut sequence[0];
+
+                        let closure: &mut Box<
+                            dyn for<'a> FnMut(&'a mut dyn SequenceParamTraits) -> bool + Send + Sync + 'static
+                        > = &mut *closure_ptr;
+
+                        closure(self as &mut dyn SequenceParamTraits);
+                    }
+                }
+            }
         }
     }
 }
